@@ -68,3 +68,4 @@ export const TrendsChart = ({ data, loading }: TrendsChartProps) => {
   );
 };
 
+

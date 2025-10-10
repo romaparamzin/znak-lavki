@@ -42,3 +42,4 @@ export const ValidationBarChart = ({ data, loading }: ValidationBarChartProps) =
   );
 };
 
+

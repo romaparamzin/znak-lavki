@@ -64,3 +64,4 @@ export interface OAuthConfig {
   scope: string[];
 }
 
+

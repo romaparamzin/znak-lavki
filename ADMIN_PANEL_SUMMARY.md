@@ -320,3 +320,4 @@ const canBlock = authService.checkPermission(Permission.MARKS_BLOCK);
 **Status**: Foundation Complete - Ready for API Integration  
 **Next Steps**: См. QUICK_START.md для дальнейших инструкций
 
+
