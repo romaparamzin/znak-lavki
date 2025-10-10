@@ -1,0 +1,33 @@
+# Конфигурация Elasticsearch
+
+cluster.name: znak-lavki-logs
+node.name: es-node-1
+
+# Настройки сети
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# Настройки discovery для single-node (для развертывания в кластере измените)
+discovery.type: single-node
+
+# Настройки индексов
+action.auto_create_index: true
+action.destructive_requires_name: true
+
+# Настройки памяти
+bootstrap.memory_lock: true
+
+# X-Pack настройки (опционально)
+xpack.security.enabled: false
+xpack.monitoring.enabled: true
+xpack.monitoring.collection.enabled: true
+
+# Индексы шаблоны
+# Автоматическое удаление старых индексов (ILM - Index Lifecycle Management)
+xpack.ilm.enabled: true
+
+# CORS для Kibana
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+

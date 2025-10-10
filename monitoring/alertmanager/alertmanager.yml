@@ -1,0 +1,175 @@
+# Конфигурация Alertmanager для отправки уведомлений
+
+global:
+  resolve_timeout: 5m
+  # SMTP конфигурация для email уведомлений
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@znak-lavki.com'
+  smtp_auth_username: 'your-email@gmail.com'
+  smtp_auth_password: 'your-app-password'
+  smtp_require_tls: true
+
+# Шаблоны для уведомлений
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Маршрутизация алертов
+route:
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  
+  routes:
+    # Критические алерты - немедленно
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 5m
+
+    # Warning алерты - с группировкой
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 3h
+
+    # Info алерты - только в рабочее время
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+      group_wait: 5m
+      group_interval: 30m
+      repeat_interval: 24h
+      active_time_intervals:
+        - business-hours
+
+    # Database алерты - отдельная команда
+    - match:
+        team: database
+      receiver: 'database-team'
+      group_by: ['alertname', 'instance']
+
+    # DevOps алерты
+    - match:
+        team: devops
+      receiver: 'devops-team'
+
+    # Backend алерты
+    - match:
+        team: backend
+      receiver: 'backend-team'
+
+# Временные интервалы
+time_intervals:
+  - name: business-hours
+    time_intervals:
+      - times:
+        - start_time: '09:00'
+          end_time: '18:00'
+        weekdays: ['monday:friday']
+
+# Receivers (получатели уведомлений)
+receivers:
+  # Default receiver
+  - name: 'default'
+    email_configs:
+      - to: 'team@znak-lavki.com'
+        headers:
+          Subject: '[Znak Lavki] {{ .GroupLabels.alertname }}'
+
+  # Критические алерты
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'oncall@znak-lavki.com'
+        send_resolved: true
+        headers:
+          Subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
+    
+    # Telegram уведомления
+    # telegram_configs:
+    #   - bot_token: 'YOUR_BOT_TOKEN'
+    #     chat_id: YOUR_CHAT_ID
+    #     parse_mode: 'HTML'
+    #     message: |
+    #       🚨 <b>CRITICAL ALERT</b>
+    #       {{ range .Alerts }}
+    #       <b>Alert:</b> {{ .Labels.alertname }}
+    #       <b>Summary:</b> {{ .Annotations.summary }}
+    #       <b>Description:</b> {{ .Annotations.description }}
+    #       {{ end }}
+    
+    # Slack уведомления
+    # slack_configs:
+    #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+    #     channel: '#alerts-critical'
+    #     title: '🚨 Critical Alert'
+    #     text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+  # Warning алерты
+  - name: 'warning-alerts'
+    email_configs:
+      - to: 'warnings@znak-lavki.com'
+        send_resolved: true
+        headers:
+          Subject: '⚠️  [WARNING] {{ .GroupLabels.alertname }}'
+
+  # Info алерты
+  - name: 'info-alerts'
+    email_configs:
+      - to: 'info@znak-lavki.com'
+        send_resolved: false
+        headers:
+          Subject: 'ℹ️  [INFO] {{ .GroupLabels.alertname }}'
+
+  # Database team
+  - name: 'database-team'
+    email_configs:
+      - to: 'database-team@znak-lavki.com'
+        send_resolved: true
+        headers:
+          Subject: '[DB] {{ .GroupLabels.alertname }}'
+
+  # DevOps team
+  - name: 'devops-team'
+    email_configs:
+      - to: 'devops-team@znak-lavki.com'
+        send_resolved: true
+        headers:
+          Subject: '[DevOps] {{ .GroupLabels.alertname }}'
+
+  # Backend team
+  - name: 'backend-team'
+    email_configs:
+      - to: 'backend-team@znak-lavki.com'
+        send_resolved: true
+        headers:
+          Subject: '[Backend] {{ .GroupLabels.alertname }}'
+
+# Подавление алертов (inhibit rules)
+inhibit_rules:
+  # Подавить все остальные алерты если сервис недоступен
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['service']
+
+  # Подавить алерты о высоком CPU/Memory если node не готов
+  - source_match:
+      alertname: 'KubernetesNodeNotReady'
+    target_match_re:
+      alertname: 'KubernetesNodeHigh.*'
+    equal: ['node']
+
+  # Подавить алерты о приложении если database недоступна
+  - source_match:
+      alertname: 'PostgresDown'
+    target_match_re:
+      severity: 'warning'
+    equal: ['cluster']
+

@@ -1,0 +1,50 @@
+# ConfigMap для хранения не-секретных конфигураций
+# Секретные данные должны храниться в Secrets
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: znak-lavki-config
+  namespace: znak-lavki
+data:
+  # Database configuration
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "znak_lavki"
+  
+  # Redis configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  
+  # MinIO configuration
+  MINIO_ENDPOINT: "minio-service"
+  MINIO_PORT: "9000"
+  MINIO_USE_SSL: "false"
+  MINIO_BUCKET_QR_CODES: "qr-codes"
+  MINIO_BUCKET_PRODUCTS: "products"
+  
+  # Application configuration
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+  
+  # JWT configuration
+  JWT_EXPIRES_IN: "24h"
+  
+  # CORS configuration
+  CORS_ORIGIN: "https://znak-lavki.example.com"
+  
+  # Service URLs (internal)
+  MARK_SERVICE_URL: "http://mark-service:3001"
+  INTEGRATION_SERVICE_URL: "http://integration-service:3002"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:3003"
+  
+  # Rate limiting
+  RATE_LIMIT_TTL: "60"
+  RATE_LIMIT_MAX: "100"
+  
+  # SMTP configuration (non-sensitive)
+  SMTP_HOST: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_SECURE: "false"
+  EMAIL_FROM: "noreply@znak-lavki.com"
+

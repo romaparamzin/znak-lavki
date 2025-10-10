@@ -1,0 +1,9 @@
+# Namespace для изоляции всех ресурсов проекта Znak Lavki
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: znak-lavki
+  labels:
+    name: znak-lavki
+    environment: production
+

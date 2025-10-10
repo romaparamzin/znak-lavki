@@ -1,0 +1,35 @@
+# Пример файла с переменными для Terraform
+# Скопируйте этот файл в terraform.tfvars и заполните своими значениями
+
+# Yandex Cloud credentials
+yandex_cloud_id  = "your-cloud-id"
+yandex_folder_id = "your-folder-id"
+yandex_token     = "your-oauth-token"
+yandex_zone      = "ru-central1-a"
+
+# PostgreSQL
+postgres_password = "CHANGE_ME_STRONG_PASSWORD"
+postgres_username = "postgres"
+postgres_database_name = "znak_lavki"
+postgres_resource_preset = "s2.micro" # 2 vCPU, 8 GB RAM
+postgres_disk_size = 50 # GB
+
+# Redis
+redis_password = "CHANGE_ME_STRONG_PASSWORD"
+redis_resource_preset = "hm1.nano" # 2 GB RAM
+redis_disk_size = 10 # GB
+
+# Kubernetes
+k8s_version = "1.28"
+k8s_node_count = 3
+k8s_node_cores = 2
+k8s_node_memory = 4 # GB
+k8s_node_disk_size = 50 # GB
+
+# S3
+s3_bucket_name = "znak-lavki-qr-codes"
+
+# Общие настройки
+environment = "production"
+project = "znak-lavki"
+

@@ -1,0 +1,57 @@
+# Конфигурация Filebeat для сбора логов
+
+filebeat.inputs:
+  # Логи приложений из Docker контейнеров
+  - type: container
+    paths:
+      - '/var/lib/docker/containers/*/*.log'
+    processors:
+      - add_docker_metadata:
+          host: "unix:///var/run/docker.sock"
+      - decode_json_fields:
+          fields: ["message"]
+          target: ""
+          overwrite_keys: true
+
+  # Логи из файлов (если используется)
+  - type: log
+    enabled: false
+    paths:
+      - /var/log/*.log
+    fields:
+      type: system
+      environment: "${ENVIRONMENT:development}"
+
+# Kubernetes метаданные (если используется K8s)
+processors:
+  - add_kubernetes_metadata:
+      host: ${NODE_NAME}
+      matchers:
+        - logs_path:
+            logs_path: "/var/log/containers/"
+
+# Выходные настройки
+output.logstash:
+  hosts: ["logstash:5044"]
+  
+  # Балансировка нагрузки
+  loadbalance: true
+  
+  # Таймауты
+  timeout: 30s
+  
+  # Буферизация
+  bulk_max_size: 2048
+
+# Настройки мониторинга самого Filebeat
+monitoring.enabled: true
+
+# Logging
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
