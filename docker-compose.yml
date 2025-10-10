@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: znak-lavki-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-znak_lavki}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - znak-lavki-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: znak-lavki-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - znak-lavki-network
+
+  # MinIO S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: znak-lavki-minio
+    restart: unless-stopped
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - znak-lavki-network
+
+  # MinIO Client for bucket initialization
+  minio-init:
+    image: minio/mc:latest
+    container_name: znak-lavki-minio-init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+      /usr/bin/mc mb myminio/qr-codes --ignore-existing;
+      /usr/bin/mc mb myminio/products --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/qr-codes;
+      exit 0;
+      "
+    networks:
+      - znak-lavki-network
+
+  # pgAdmin (Optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: znak-lavki-pgadmin
+    restart: unless-stopped
+    ports:
+      - '5050:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@znak-lavki.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - znak-lavki-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  znak-lavki-network:
+    driver: bridge
+
+

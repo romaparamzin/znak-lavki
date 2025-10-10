@@ -1,0 +1,19 @@
+{
+  "name": "@znak-lavki/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types and interfaces",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
+
+

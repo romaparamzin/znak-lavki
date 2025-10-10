@@ -1,0 +1,27 @@
+{
+  "name": "@znak-lavki/ui",
+  "version": "1.0.0",
+  "description": "Shared UI components",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  }
+}
+
+
