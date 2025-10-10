@@ -35,7 +35,7 @@
     "recharts": "^2.10.3",
     "socket.io-client": "^4.6.0",
     "xlsx": "^0.18.5",
-    "zustand": "^4.4.7"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.1",
