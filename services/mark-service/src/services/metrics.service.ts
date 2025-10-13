@@ -24,8 +24,11 @@ export class MetricsService {
   private readonly cacheMisses: Counter<string>;
 
   constructor() {
-    // Use default registry
+    // Use default registry and clear it to avoid duplicate registration
     this.registry = register;
+    
+    // Clear existing metrics to prevent duplicate registration errors
+    this.registry.clear();
 
     // Initialize HTTP metrics
     this.httpRequestsTotal = new Counter({
