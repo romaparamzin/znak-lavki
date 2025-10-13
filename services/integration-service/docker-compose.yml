@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  integration-service:
+    build:
+      context: ../..
+      dockerfile: services/integration-service/Dockerfile
+    container_name: integration-service
+    ports:
+      - '3002:3002'
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      LOG_LEVEL: info
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: znak_lavki_integration
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      WMS_BASE_URL: http://wms-system:8080
+      WMS_API_KEY: ${WMS_API_KEY:-test-key}
+      WMS_WEBHOOK_SECRET: ${WMS_WEBHOOK_SECRET:-wms-secret}
+      PIM_BASE_URL: http://pim-system:8081
+      PIM_API_TOKEN: ${PIM_API_TOKEN:-test-token}
+      PIM_WEBHOOK_SECRET: ${PIM_WEBHOOK_SECRET:-pim-secret}
+      ONEC_BASE_URL: http://1c-system:8082
+      ONEC_USERNAME: ${ONEC_USERNAME:-admin}
+      ONEC_PASSWORD: ${ONEC_PASSWORD:-admin}
+      ONEC_WEBHOOK_SECRET: ${ONEC_WEBHOOK_SECRET:-1c-secret}
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - integration-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3002/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: integration-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: znak_lavki_integration
+    ports:
+      - '5433:5432'
+    volumes:
+      - integration-postgres-data:/var/lib/postgresql/data
+    networks:
+      - integration-network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: integration-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - '5672:5672'
+      - '15672:15672' # Management UI
+    volumes:
+      - integration-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - integration-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  integration-network:
+    driver: bridge
+
+volumes:
+  integration-postgres-data:
+  integration-rabbitmq-data:
