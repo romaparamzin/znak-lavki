@@ -36,10 +36,8 @@ export const markKeys = {
 export const useMarks = (filters: MarkFilters) => {
   return useQuery({
     queryKey: markKeys.list(filters),
-    queryFn: () => apiClient.get<PaginatedMarksResponse>(
-      API_ENDPOINTS.MARKS.LIST,
-      { params: filters }
-    ),
+    queryFn: () =>
+      apiClient.get<PaginatedMarksResponse>(API_ENDPOINTS.MARKS.LIST, { params: filters }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
@@ -72,10 +70,8 @@ export const useMarkByCode = (code: string) => {
 export const useExpiringMarks = (dto: ExpiringMarksDto) => {
   return useQuery({
     queryKey: markKeys.expiring(dto.daysBeforeExpiry || 30),
-    queryFn: () => apiClient.get<PaginatedMarksResponse>(
-      API_ENDPOINTS.MARKS.EXPIRING,
-      { params: dto }
-    ),
+    queryFn: () =>
+      apiClient.get<PaginatedMarksResponse>(API_ENDPOINTS.MARKS.EXPIRING, { params: dto }),
   });
 };
 
@@ -106,33 +102,12 @@ export const useBlockMark = () => {
 
   return useMutation({
     mutationFn: ({ markCode, reason }: { markCode: string; reason: string }) =>
-      apiClient.put(
-        API_ENDPOINTS.MARKS.BLOCK(markCode),
-        { reason } as BlockMarkRequest
-      ),
-    onMutate: async ({ markCode }) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: markKeys.lists() });
-
-      // Snapshot previous value
-      const previousMarks = queryClient.getQueryData(markKeys.lists());
-
-      // Optimistically update (optional)
-      // queryClient.setQueryData(markKeys.lists(), (old: any) => {
-      //   // Update logic here
-      // });
-
-      return { previousMarks };
-    },
+      apiClient.put(API_ENDPOINTS.MARKS.BLOCK(markCode), { reason } as BlockMarkRequest),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
       message.success('Марка успешно заблокирована');
     },
-    onError: (error: Error, _, context) => {
-      // Rollback on error
-      if (context?.previousMarks) {
-        queryClient.setQueryData(markKeys.lists(), context.previousMarks);
-      }
+    onError: (error: Error) => {
       message.error(`Ошибка блокировки: ${error.message}`);
     },
   });
@@ -146,10 +121,7 @@ export const useUnblockMark = () => {
 
   return useMutation({
     mutationFn: ({ markCode, reason }: { markCode: string; reason?: string }) =>
-      apiClient.put(
-        API_ENDPOINTS.MARKS.UNBLOCK(markCode),
-        { reason }
-      ),
+      apiClient.put(API_ENDPOINTS.MARKS.UNBLOCK(markCode), { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
       message.success('Марка разблокирована');
@@ -171,9 +143,7 @@ export const useBulkBlockMarks = () => {
       apiClient.post<BulkOperationResponse>(API_ENDPOINTS.MARKS.BULK_BLOCK, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
-      message.success(
-        `Заблокировано: ${data.successCount}, Ошибок: ${data.failureCount}`
-      );
+      message.success(`Заблокировано: ${data.successCount}, Ошибок: ${data.failureCount}`);
     },
     onError: (error: Error) => {
       message.error(`Ошибка массовой блокировки: ${error.message}`);
@@ -192,9 +162,7 @@ export const useBulkUnblockMarks = () => {
       apiClient.post<BulkOperationResponse>(API_ENDPOINTS.MARKS.BULK_UNBLOCK, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
-      message.success(
-        `Разблокировано: ${data.successCount}, Ошибок: ${data.failureCount}`
-      );
+      message.success(`Разблокировано: ${data.successCount}, Ошибок: ${data.failureCount}`);
     },
     onError: (error: Error) => {
       message.error(`Ошибка массовой разблокировки: ${error.message}`);
@@ -221,7 +189,3 @@ export const useValidateMark = () => {
     },
   });
 };
-
-
-
-

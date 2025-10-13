@@ -143,6 +143,8 @@ export interface AuditLogEntry {
   createdAt: string;
 }
 
-
-
-
+export interface ExpiringMarksDto {
+  daysBeforeExpiry?: number;
+  page?: number;
+  limit?: number;
+}

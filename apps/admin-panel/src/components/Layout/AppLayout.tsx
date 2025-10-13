@@ -4,7 +4,7 @@
  * Fully responsive for mobile, tablet, and desktop
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Layout,
@@ -43,7 +43,6 @@ const AppLayout = () => {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUIStore();
-  const [loading, setLoading] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const screens = useBreakpoint();
 
@@ -52,14 +51,11 @@ const AppLayout = () => {
   const isTablet = screens.md && !screens.lg; // lg breakpoint is 992px
 
   const handleLogout = async () => {
-    setLoading(true);
     try {
       await logout();
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-    } finally {
-      setLoading(false);
     }
   };
 

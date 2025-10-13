@@ -6,7 +6,6 @@
 
 import {
   PlusOutlined,
-  SearchOutlined,
   StopOutlined,
   CheckCircleOutlined,
   ExportOutlined,
@@ -60,7 +59,6 @@ const MarksPage = () => {
 
   // Determine if we're on mobile/tablet
   const isMobile = !screens.md; // md breakpoint is 768px
-  const isTablet = screens.md && !screens.lg; // lg breakpoint is 992px
 
   // Fetch marks from API
   const { data: marksData, isLoading, error, refetch } = useMarks(filters);
