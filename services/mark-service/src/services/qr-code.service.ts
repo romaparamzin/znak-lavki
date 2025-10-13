@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as QRCode from 'qrcode';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 
 /**
  * QR Code Service
@@ -14,7 +14,17 @@ export class QrCodeService {
   private readonly QR_OPTIONS: QRCode.QRCodeToDataURLOptions = {
     errorCorrectionLevel: 'H', // High error correction (allows logo embedding)
     type: 'image/png',
-    quality: 0.95,
+    margin: 1,
+    width: 400,
+    color: {
+      dark: '#000000',
+      light: '#FFFFFF',
+    },
+  };
+
+  // Buffer generation options
+  private readonly QR_BUFFER_OPTIONS: QRCode.QRCodeToBufferOptions = {
+    errorCorrectionLevel: 'H',
     margin: 1,
     width: 400,
     color: {
@@ -32,10 +42,7 @@ export class QrCodeService {
    * @param embedLogo - Whether to embed logo
    * @returns Promise<string> - Data URL of the QR code image
    */
-  async generateQrCode(
-    data: string,
-    embedLogo: boolean = false,
-  ): Promise<string> {
+  async generateQrCode(data: string, embedLogo: boolean = false): Promise<string> {
     try {
       // Generate base QR code
       const qrCodeDataUrl = await QRCode.toDataURL(data, this.QR_OPTIONS);
@@ -58,10 +65,7 @@ export class QrCodeService {
    * @param embedLogo - Whether to embed logo
    * @returns Promise<string[]> - Array of data URLs
    */
-  async generateQrCodesBatch(
-    dataArray: string[],
-    embedLogo: boolean = false,
-  ): Promise<string[]> {
+  async generateQrCodesBatch(dataArray: string[], embedLogo: boolean = false): Promise<string[]> {
     const startTime = Date.now();
     this.logger.log(`Starting batch QR code generation for ${dataArray.length} codes`);
 
@@ -76,15 +80,11 @@ export class QrCodeService {
       );
       results.push(...batchResults);
 
-      this.logger.debug(
-        `Generated ${results.length}/${dataArray.length} QR codes`,
-      );
+      this.logger.debug(`Generated ${results.length}/${dataArray.length} QR codes`);
     }
 
     const elapsed = Date.now() - startTime;
-    this.logger.log(
-      `Batch QR code generation completed: ${results.length} codes in ${elapsed}ms`,
-    );
+    this.logger.log(`Batch QR code generation completed: ${results.length} codes in ${elapsed}ms`);
 
     return results;
   }
@@ -95,16 +95,10 @@ export class QrCodeService {
    * @param embedLogo - Whether to embed logo
    * @returns Promise<Buffer> - PNG image buffer
    */
-  async generateQrCodeBuffer(
-    data: string,
-    embedLogo: boolean = false,
-  ): Promise<Buffer> {
+  async generateQrCodeBuffer(data: string, embedLogo: boolean = false): Promise<Buffer> {
     try {
       // Generate QR code as buffer
-      const qrBuffer = await QRCode.toBuffer(data, {
-        ...this.QR_OPTIONS,
-        type: 'png',
-      });
+      const qrBuffer = await QRCode.toBuffer(data, this.QR_BUFFER_OPTIONS);
 
       // If logo embedding is requested
       if (embedLogo) {
@@ -113,10 +107,7 @@ export class QrCodeService {
 
       return qrBuffer;
     } catch (error: any) {
-      this.logger.error(
-        `Failed to generate QR code buffer: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to generate QR code buffer: ${error.message}`, error.stack);
       throw new Error(`QR code buffer generation failed: ${error.message}`);
     }
   }
@@ -156,9 +147,7 @@ export class QrCodeService {
       // Convert back to data URL
       return `data:image/png;base64,${finalBuffer.toString('base64')}`;
     } catch (error: any) {
-      this.logger.warn(
-        `Failed to embed logo, returning base QR code: ${error.message}`,
-      );
+      this.logger.warn(`Failed to embed logo, returning base QR code: ${error.message}`);
       return qrCodeDataUrl;
     }
   }
@@ -186,9 +175,7 @@ export class QrCodeService {
         .png()
         .toBuffer();
     } catch (error: any) {
-      this.logger.warn(
-        `Failed to embed logo to buffer, returning base QR code: ${error.message}`,
-      );
+      this.logger.warn(`Failed to embed logo to buffer, returning base QR code: ${error.message}`);
       return qrBuffer;
     }
   }
@@ -227,4 +214,3 @@ export class QrCodeService {
     return data.length > 0 && data.length <= MAX_LENGTH;
   }
 }
-
