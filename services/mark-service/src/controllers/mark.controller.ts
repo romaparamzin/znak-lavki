@@ -35,10 +35,12 @@ import {
   BulkOperationResponseDto,
 } from '../dto/mark-response.dto';
 import { MetricsInterceptor } from '../interceptors/metrics.interceptor';
+import { MetricsService } from '../services/metrics.service';
+import { AuditLogger, RequestWithCorrelation } from '../middleware/logger.middleware';
 
 /**
  * Mark Controller
- * Handles all quality mark REST API endpoints
+ * Handles all quality mark REST API endpoints with metrics and audit logging
  */
 @ApiTags('Quality Marks')
 @Controller('marks')
@@ -48,7 +50,11 @@ import { MetricsInterceptor } from '../interceptors/metrics.interceptor';
 export class MarkController {
   private readonly logger = new Logger(MarkController.name);
 
-  constructor(private readonly markService: MarkService) {}
+  constructor(
+    private readonly markService: MarkService,
+    private readonly metricsService: MetricsService,
+    private readonly auditLogger: AuditLogger,
+  ) {}
 
   /**
    * Generate new quality marks
@@ -77,11 +83,39 @@ export class MarkController {
   })
   async generateMarks(
     @Body() dto: GenerateMarkDto,
-    @Req() req: Request,
+    @Req() req: RequestWithCorrelation,
   ): Promise<GenerateMarkResponseDto> {
-    const userId = this.extractUserId(req);
+    const userId = this.extractUserId(req) || 'anonymous';
+    const correlationId = req.correlationId || 'unknown';
+
     this.logger.log(`Generate marks request from user: ${userId}`);
-    return await this.markService.generateMarks(dto, userId);
+
+    try {
+      const result = await this.markService.generateMarks(dto, userId);
+
+      // Record metrics
+      this.metricsService.collectMarkGenerated(dto.quantity, dto.gtin);
+
+      // Audit log
+      this.auditLogger.logMarkGeneration(userId, correlationId, dto.quantity, dto.gtin, 'success');
+
+      return result;
+    } catch (error) {
+      // Record error metrics
+      this.metricsService.recordMarkGenerationError(error.name || 'UnknownError', dto.gtin);
+
+      // Audit log failure
+      this.auditLogger.logMarkGeneration(
+        userId,
+        correlationId,
+        dto.quantity,
+        dto.gtin,
+        'failure',
+        error,
+      );
+
+      throw error;
+    }
   }
 
   /**
@@ -151,8 +185,7 @@ export class MarkController {
   @Throttle({ default: { limit: 50, ttl: 60000 } })
   @ApiOperation({
     summary: 'List marks with filters',
-    description:
-      'Get paginated list of marks with optional filters for status, GTIN, dates, etc.',
+    description: 'Get paginated list of marks with optional filters for status, GTIN, dates, etc.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -196,12 +229,43 @@ export class MarkController {
   async blockMark(
     @Param('markCode') markCode: string,
     @Body() dto: BlockMarkDto,
-    @Req() req: Request,
+    @Req() req: RequestWithCorrelation,
   ): Promise<MarkResponseDto> {
-    const userId = this.extractUserId(req);
+    const userId = this.extractUserId(req) || 'anonymous';
     const ipAddress = this.extractIpAddress(req);
+    const correlationId = req.correlationId || 'unknown';
+
     this.logger.log(`Block mark request from user: ${userId} for mark: ${markCode}`);
-    return await this.markService.blockMark(markCode, dto, userId, ipAddress);
+
+    try {
+      const result = await this.markService.blockMark(markCode, dto, userId, ipAddress);
+
+      // Record metrics
+      this.metricsService.recordMarkBlocked(1);
+
+      // Audit log
+      this.auditLogger.logMarkBlocking(
+        userId,
+        correlationId,
+        [markCode],
+        dto.reason || 'No reason provided',
+        'success',
+      );
+
+      return result;
+    } catch (error) {
+      // Audit log failure
+      this.auditLogger.logMarkBlocking(
+        userId,
+        correlationId,
+        [markCode],
+        dto.reason || 'No reason provided',
+        'failure',
+        error,
+      );
+
+      throw error;
+    }
   }
 
   /**
@@ -263,14 +327,37 @@ export class MarkController {
   })
   async bulkBlockMarks(
     @Body() dto: BulkBlockDto,
-    @Req() req: Request,
+    @Req() req: RequestWithCorrelation,
   ): Promise<BulkOperationResponseDto> {
-    const userId = this.extractUserId(req);
+    const userId = this.extractUserId(req) || 'anonymous';
     const ipAddress = this.extractIpAddress(req);
-    this.logger.log(
-      `Bulk block request from user: ${userId} for ${dto.markCodes.length} marks`,
-    );
-    return await this.markService.bulkBlockMarks(dto, userId, ipAddress);
+    const correlationId = req.correlationId || 'unknown';
+
+    this.logger.log(`Bulk block request from user: ${userId} for ${dto.markCodes.length} marks`);
+
+    try {
+      const result = await this.markService.bulkBlockMarks(dto, userId, ipAddress);
+
+      // Record metrics for successful operations
+      this.metricsService.recordMarkBlocked(result.successCount);
+
+      // Audit log
+      this.auditLogger.logMarkBlocking(userId, correlationId, dto.markCodes, dto.reason, 'success');
+
+      return result;
+    } catch (error) {
+      // Audit log failure
+      this.auditLogger.logMarkBlocking(
+        userId,
+        correlationId,
+        dto.markCodes,
+        dto.reason,
+        'failure',
+        error,
+      );
+
+      throw error;
+    }
   }
 
   /**
@@ -295,9 +382,7 @@ export class MarkController {
   ): Promise<BulkOperationResponseDto> {
     const userId = this.extractUserId(req);
     const ipAddress = this.extractIpAddress(req);
-    this.logger.log(
-      `Bulk unblock request from user: ${userId} for ${dto.markCodes.length} marks`,
-    );
+    this.logger.log(`Bulk unblock request from user: ${userId} for ${dto.markCodes.length} marks`);
     return await this.markService.bulkUnblockMarks(dto, userId, ipAddress);
   }
 
@@ -318,9 +403,7 @@ export class MarkController {
     description: 'Expiring marks retrieved successfully',
     type: PaginatedMarkResponseDto,
   })
-  async getExpiringMarks(
-    @Query() dto: ExpiringMarksDto,
-  ): Promise<PaginatedMarkResponseDto> {
+  async getExpiringMarks(@Query() dto: ExpiringMarksDto): Promise<PaginatedMarkResponseDto> {
     return await this.markService.getExpiringMarks(dto);
   }
 
@@ -343,11 +426,43 @@ export class MarkController {
   })
   async validateMark(
     @Body() dto: ValidateMarkDto,
-    @Req() req: Request,
+    @Req() req: RequestWithCorrelation,
   ): Promise<ValidateMarkResponseDto> {
-    const userId = this.extractUserId(req);
+    const userId = this.extractUserId(req) || 'anonymous';
     const ipAddress = this.extractIpAddress(req);
-    return await this.markService.validateMark(dto, userId, ipAddress);
+    const correlationId = req.correlationId || 'unknown';
+    const startTime = Date.now();
+
+    try {
+      const result = await this.markService.validateMark(dto, userId, ipAddress);
+      const duration = Date.now() - startTime;
+
+      // Record validation metrics with timing
+      this.metricsService.recordValidationTime(
+        duration,
+        result.isValid ? 'success' : 'failure',
+        undefined,
+        result.isValid ? undefined : result.reason,
+      );
+
+      // Audit log validation
+      this.auditLogger.logMarkValidation(
+        userId,
+        correlationId,
+        dto.markCode,
+        result.isValid,
+        result.reason,
+      );
+
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+
+      // Record failed validation
+      this.metricsService.recordValidationTime(duration, 'failure', undefined, error.message);
+
+      throw error;
+    }
   }
 
   /**
@@ -356,7 +471,7 @@ export class MarkController {
    */
   private extractUserId(req: Request): string | undefined {
     // Placeholder - in production, extract from JWT/session
-    return req.headers['x-user-id'] as string || undefined;
+    return (req.headers['x-user-id'] as string) || undefined;
   }
 
   /**
@@ -370,4 +485,3 @@ export class MarkController {
     );
   }
 }
-

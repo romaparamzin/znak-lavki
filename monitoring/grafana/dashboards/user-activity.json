@@ -1,0 +1,285 @@
+{
+  "dashboard": {
+    "title": "Znak Lavki - User Activity Dashboard",
+    "tags": ["znak-lavki", "users", "activity", "audit"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "1m",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Users (Last 24h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(count by (user_id) (http_requests_total))",
+            "legendFormat": "Active Users",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 }
+      },
+      {
+        "id": 2,
+        "title": "Total Requests (24h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(http_requests_total[24h]))",
+            "legendFormat": "Total Requests",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 }
+      },
+      {
+        "id": 3,
+        "title": "Marks Generated (24h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(marks_generated_total[24h]))",
+            "legendFormat": "Total Marks",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 100 },
+                { "color": "green", "value": 1000 }
+              ]
+            }
+          }
+        },
+        "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 }
+      },
+      {
+        "id": 4,
+        "title": "Marks Validated (24h)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(marks_validated_total[24h]))",
+            "legendFormat": "Total Validated",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 }
+      },
+      {
+        "id": 5,
+        "title": "User Activity Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Request Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Requests/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 }
+      },
+      {
+        "id": 6,
+        "title": "Mark Operations Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(marks_generated_total[5m])",
+            "legendFormat": "Generation Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(marks_validated_total[5m])",
+            "legendFormat": "Validation Rate",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(marks_blocked_total[5m])",
+            "legendFormat": "Blocking Rate",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Operations/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 }
+      },
+      {
+        "id": 7,
+        "title": "Top Active Endpoints",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(http_requests_total[1h])) by (endpoint))",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 }
+      },
+      {
+        "id": 8,
+        "title": "Request Methods Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[1h])) by (method)",
+            "legendFormat": "{{method}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 }
+      },
+      {
+        "id": 9,
+        "title": "Activity by Hour of Day",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[1h]))",
+            "legendFormat": "Requests",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Activity"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 }
+      },
+      {
+        "id": 10,
+        "title": "Mark Generation by Supplier",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum(increase(marks_generated_total[24h])) by (gtin))",
+            "legendFormat": "",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 }
+      },
+      {
+        "id": 11,
+        "title": "QR Code Generation Activity",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(qr_codes_generated_total[5m])",
+            "legendFormat": "QR Generation Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "QR Codes/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 }
+      },
+      {
+        "id": 12,
+        "title": "Cache Usage Statistics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(cache_hits_total[5m])",
+            "legendFormat": "Cache Hits - {{cache_type}}",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(cache_misses_total[5m])",
+            "legendFormat": "Cache Misses - {{cache_type}}",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Operations/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 }
+      },
+      {
+        "id": 13,
+        "title": "Response Status Codes Distribution",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m])) by (status)",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 38 }
+      },
+      {
+        "id": 14,
+        "title": "Peak Activity Hours",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[1h]))",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 38 }
+      }
+    ]
+  }
+}

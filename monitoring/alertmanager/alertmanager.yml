@@ -20,7 +20,7 @@ route:
   group_wait: 10s
   group_interval: 10s
   repeat_interval: 12h
-  
+
   routes:
     # Критические алерты - немедленно
     - match:
@@ -69,8 +69,8 @@ time_intervals:
   - name: business-hours
     time_intervals:
       - times:
-        - start_time: '09:00'
-          end_time: '18:00'
+          - start_time: '09:00'
+            end_time: '18:00'
         weekdays: ['monday:friday']
 
 # Receivers (получатели уведомлений)
@@ -89,26 +89,38 @@ receivers:
         send_resolved: true
         headers:
           Subject: '🚨 [CRITICAL] {{ .GroupLabels.alertname }}'
-    
-    # Telegram уведомления
-    # telegram_configs:
-    #   - bot_token: 'YOUR_BOT_TOKEN'
-    #     chat_id: YOUR_CHAT_ID
-    #     parse_mode: 'HTML'
-    #     message: |
-    #       🚨 <b>CRITICAL ALERT</b>
-    #       {{ range .Alerts }}
-    #       <b>Alert:</b> {{ .Labels.alertname }}
-    #       <b>Summary:</b> {{ .Annotations.summary }}
-    #       <b>Description:</b> {{ .Annotations.description }}
-    #       {{ end }}
-    
-    # Slack уведомления
-    # slack_configs:
-    #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
-    #     channel: '#alerts-critical'
-    #     title: '🚨 Critical Alert'
-    #     text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+    # PagerDuty для критических алертов
+    pagerduty_configs:
+      - routing_key: '${PAGERDUTY_INTEGRATION_KEY}' # Set via environment variable
+        severity: 'critical'
+        description: '{{ .GroupLabels.alertname }}'
+        details:
+          summary: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+          description: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+          num_alerts: '{{ .Alerts | len }}'
+          firing_alerts: '{{ range .Alerts.Firing }}{{ .Labels.alertname }} {{ end }}'
+        client: 'Znak Lavki Monitoring'
+        client_url: 'https://grafana.znak-lavki.com'
+
+    # Slack уведомления для критических алертов
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL_CRITICAL}' # Set via environment variable
+        channel: '#alerts-critical'
+        username: 'Prometheus Alert'
+        icon_emoji: ':rotating_light:'
+        title: '🚨 Critical Alert: {{ .GroupLabels.alertname }}'
+        title_link: 'https://grafana.znak-lavki.com'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Labels.alertname }}
+          *Severity:* {{ .Labels.severity }}
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          {{ if .Annotations.runbook_url }}*Runbook:* {{ .Annotations.runbook_url }}{{ end }}
+          {{ end }}
+        color: 'danger'
+        send_resolved: true
 
   # Warning алерты
   - name: 'warning-alerts'
@@ -117,6 +129,22 @@ receivers:
         send_resolved: true
         headers:
           Subject: '⚠️  [WARNING] {{ .GroupLabels.alertname }}'
+
+    # Slack для warning
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL_WARNING}'
+        channel: '#alerts-warning'
+        username: 'Prometheus Alert'
+        icon_emoji: ':warning:'
+        title: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+        title_link: 'https://grafana.znak-lavki.com'
+        text: |
+          {{ range .Alerts }}
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+        color: 'warning'
+        send_resolved: true
 
   # Info алерты
   - name: 'info-alerts'
@@ -172,4 +200,3 @@ inhibit_rules:
     target_match_re:
       severity: 'warning'
     equal: ['cluster']
-

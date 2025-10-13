@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -13,10 +13,14 @@ import { AuditModule } from './modules/audit.module';
 import { AnalyticsModule } from './modules/analytics.module';
 import { QualityMark } from './entities/quality-mark.entity';
 import { AuditLog } from './entities/audit-log.entity';
+import { LoggerMiddleware, AuditLogger } from './middleware/logger.middleware';
+import { MetricsService } from './services/metrics.service';
+import { MetricsController } from './controllers/metrics.controller';
+import { MetricsCollectorScheduler } from './schedulers/metrics-collector.scheduler';
 
 /**
  * App Module
- * Root application module with database, cache, and scheduling configuration
+ * Root application module with database, cache, scheduling, and monitoring configuration
  */
 @Module({
   imports: [
@@ -90,6 +94,9 @@ import { AuditLog } from './entities/audit-log.entity';
     // Scheduling for cron jobs
     ScheduleModule.forRoot(),
 
+    // TypeORM repositories for schedulers
+    TypeOrmModule.forFeature([QualityMark, AuditLog]),
+
     // Feature modules
     QrModule,
     MarkModule,
@@ -97,7 +104,12 @@ import { AuditLog } from './entities/audit-log.entity';
     AuditModule,
     AnalyticsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, MetricsController],
+  providers: [AppService, MetricsService, AuditLogger, MetricsCollectorScheduler],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Apply logging middleware to all routes
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

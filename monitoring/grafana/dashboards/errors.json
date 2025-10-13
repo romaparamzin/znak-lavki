@@ -1,0 +1,255 @@
+{
+  "dashboard": {
+    "title": "Znak Lavki - Error Dashboard",
+    "tags": ["znak-lavki", "errors", "debugging"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "1m",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Error Rate by Service",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_errors_total[5m])) by (service)",
+            "legendFormat": "{{service}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Errors/sec"
+          }
+        ],
+        "alert": {
+          "name": "High Error Rate",
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [5],
+                "type": "gt"
+              }
+            }
+          ]
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+      },
+      {
+        "id": 2,
+        "title": "Error Rate by Status Code",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_errors_total[5m])) by (status_code)",
+            "legendFormat": "HTTP {{status_code}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Errors/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+      },
+      {
+        "id": 3,
+        "title": "Mark Generation Errors",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(mark_generation_errors_total[5m])) by (error_type)",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Errors/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+      },
+      {
+        "id": 4,
+        "title": "Mark Validation Failures",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(mark_validation_failure_total[5m])) by (reason)",
+            "legendFormat": "{{reason}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Failures/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+      },
+      {
+        "id": 5,
+        "title": "Error Distribution (Last 1h)",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(increase(http_request_errors_total[1h])) by (status_code)",
+            "legendFormat": "{{status_code}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 }
+      },
+      {
+        "id": 6,
+        "title": "4xx vs 5xx Errors",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_errors_total{status_code=~\"4..\"}[5m]))",
+            "legendFormat": "4xx Client Errors",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(http_request_errors_total{status_code=~\"5..\"}[5m]))",
+            "legendFormat": "5xx Server Errors",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Errors/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 16, "x": 8, "y": 16 }
+      },
+      {
+        "id": 7,
+        "title": "Top Error Endpoints",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(http_request_errors_total[5m])) by (endpoint, status_code))",
+            "legendFormat": "",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 }
+      },
+      {
+        "id": 8,
+        "title": "Error Trends (24h)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_errors_total[5m]))",
+            "legendFormat": "Total Errors",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(mark_generation_errors_total[5m]))",
+            "legendFormat": "Mark Generation Errors",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(mark_validation_failure_total[5m]))",
+            "legendFormat": "Validation Failures",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Errors/sec"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 }
+      },
+      {
+        "id": 9,
+        "title": "Validation Failure Reasons",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "sum(increase(mark_validation_failure_total[1h])) by (reason)",
+            "legendFormat": "{{reason}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 }
+      },
+      {
+        "id": 10,
+        "title": "Error Rate Heatmap",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_errors_total[1m])) by (endpoint)",
+            "legendFormat": "{{endpoint}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 }
+      },
+      {
+        "id": 11,
+        "title": "Mark Generation Error by Supplier",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum(rate(mark_generation_errors_total[1h])) by (supplier, error_type))",
+            "legendFormat": "",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 }
+      },
+      {
+        "id": 12,
+        "title": "Service Health Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=~\"api-gateway|mark-service|integration-service|notification-service\"}",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            },
+            "mappings": [
+              { "type": "value", "value": "0", "text": "DOWN" },
+              { "type": "value", "value": "1", "text": "UP" }
+            ]
+          }
+        },
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 }
+      }
+    ]
+  }
+}

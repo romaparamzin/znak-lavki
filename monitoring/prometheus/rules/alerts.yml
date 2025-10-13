@@ -13,9 +13,9 @@ groups:
           severity: critical
           team: backend
         annotations:
-          summary: "Сервис {{ $labels.job }} недоступен"
-          description: "Сервис {{ $labels.job }} на {{ $labels.instance }} недоступен более 1 минуты"
-          runbook_url: "https://docs.znak-lavki.com/runbooks/service-down"
+          summary: 'Сервис {{ $labels.job }} недоступен'
+          description: 'Сервис {{ $labels.job }} на {{ $labels.instance }} недоступен более 1 минуты'
+          runbook_url: 'https://docs.znak-lavki.com/runbooks/service-down'
 
       # Высокая частота ошибок
       - alert: HighErrorRate
@@ -30,8 +30,8 @@ groups:
           severity: warning
           team: backend
         annotations:
-          summary: "Высокая частота ошибок в {{ $labels.service }}"
-          description: "Сервис {{ $labels.service }} возвращает более 5% ошибок 5xx за последние 5 минут"
+          summary: 'Высокая частота ошибок в {{ $labels.service }}'
+          description: 'Сервис {{ $labels.service }} возвращает более 5% ошибок 5xx за последние 5 минут'
 
       # Медленные ответы
       - alert: HighResponseTime
@@ -44,8 +44,8 @@ groups:
           severity: warning
           team: backend
         annotations:
-          summary: "Медленные ответы в {{ $labels.service }}"
-          description: "95 перцентиль времени ответа {{ $labels.service }} превышает 1 секунду"
+          summary: 'Медленные ответы в {{ $labels.service }}'
+          description: '95 перцентиль времени ответа {{ $labels.service }} превышает 1 секунду'
 
   # Алерты для инфраструктуры
   - name: infrastructure
@@ -60,8 +60,8 @@ groups:
           severity: warning
           team: devops
         annotations:
-          summary: "Высокое использование CPU на {{ $labels.instance }}"
-          description: "CPU usage на {{ $labels.instance }} превышает 80% более 10 минут"
+          summary: 'Высокое использование CPU на {{ $labels.instance }}'
+          description: 'CPU usage на {{ $labels.instance }} превышает 80% более 10 минут'
 
       # Высокое использование памяти
       - alert: HighMemoryUsage
@@ -74,8 +74,8 @@ groups:
           severity: warning
           team: devops
         annotations:
-          summary: "Высокое использование памяти на {{ $labels.instance }}"
-          description: "Memory usage на {{ $labels.instance }} превышает 85%"
+          summary: 'Высокое использование памяти на {{ $labels.instance }}'
+          description: 'Memory usage на {{ $labels.instance }} превышает 85%'
 
       # Мало свободного места на диске
       - alert: LowDiskSpace
@@ -89,8 +89,8 @@ groups:
           severity: critical
           team: devops
         annotations:
-          summary: "Мало свободного места на {{ $labels.instance }}"
-          description: "На {{ $labels.instance }} осталось менее 15% свободного места"
+          summary: 'Мало свободного места на {{ $labels.instance }}'
+          description: 'На {{ $labels.instance }} осталось менее 15% свободного места'
 
   # Алерты для PostgreSQL
   - name: postgres
@@ -104,8 +104,8 @@ groups:
           severity: critical
           team: database
         annotations:
-          summary: "PostgreSQL недоступен"
-          description: "PostgreSQL на {{ $labels.instance }} недоступен более 1 минуты"
+          summary: 'PostgreSQL недоступен'
+          description: 'PostgreSQL на {{ $labels.instance }} недоступен более 1 минуты'
 
       # Много активных соединений
       - alert: PostgresHighConnections
@@ -119,8 +119,8 @@ groups:
           severity: warning
           team: database
         annotations:
-          summary: "Много активных соединений PostgreSQL"
-          description: "PostgreSQL на {{ $labels.instance }} использует более 80% доступных соединений"
+          summary: 'Много активных соединений PostgreSQL'
+          description: 'PostgreSQL на {{ $labels.instance }} использует более 80% доступных соединений'
 
       # Медленные запросы
       - alert: PostgresSlowQueries
@@ -130,8 +130,8 @@ groups:
           severity: warning
           team: database
         annotations:
-          summary: "Медленные запросы в PostgreSQL"
-          description: "Обнаружены запросы выполняющиеся более 1 секунды"
+          summary: 'Медленные запросы в PostgreSQL'
+          description: 'Обнаружены запросы выполняющиеся более 1 секунды'
 
       # Репликация отстает
       - alert: PostgresReplicationLag
@@ -141,8 +141,8 @@ groups:
           severity: warning
           team: database
         annotations:
-          summary: "Репликация PostgreSQL отстает"
-          description: "Репликация отстает более чем на 30 секунд"
+          summary: 'Репликация PostgreSQL отстает'
+          description: 'Репликация отстает более чем на 30 секунд'
 
   # Алерты для Redis
   - name: redis
@@ -156,8 +156,8 @@ groups:
           severity: critical
           team: backend
         annotations:
-          summary: "Redis недоступен"
-          description: "Redis на {{ $labels.instance }} недоступен более 1 минуты"
+          summary: 'Redis недоступен'
+          description: 'Redis на {{ $labels.instance }} недоступен более 1 минуты'
 
       # Высокое использование памяти Redis
       - alert: RedisHighMemoryUsage
@@ -168,8 +168,8 @@ groups:
           severity: warning
           team: backend
         annotations:
-          summary: "Высокое использование памяти Redis"
-          description: "Redis на {{ $labels.instance }} использует более 90% доступной памяти"
+          summary: 'Высокое использование памяти Redis'
+          description: 'Redis на {{ $labels.instance }} использует более 90% доступной памяти'
 
       # Много отклоненных соединений
       - alert: RedisRejectedConnections
@@ -178,8 +178,8 @@ groups:
           severity: warning
           team: backend
         annotations:
-          summary: "Redis отклоняет соединения"
-          description: "Redis на {{ $labels.instance }} отклонил {{ $value }} соединений за последние 5 минут"
+          summary: 'Redis отклоняет соединения'
+          description: 'Redis на {{ $labels.instance }} отклонил {{ $value }} соединений за последние 5 минут'
 
   # Алерты для Kubernetes
   - name: kubernetes
@@ -194,8 +194,8 @@ groups:
           severity: critical
           team: devops
         annotations:
-          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} в CrashLoopBackOff"
-          description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} перезапускается"
+          summary: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} в CrashLoopBackOff'
+          description: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} перезапускается'
 
       # Pod не может запуститься
       - alert: PodNotReady
@@ -208,8 +208,8 @@ groups:
           severity: warning
           team: devops
         annotations:
-          summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} не готов"
-          description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} не может запуститься более 15 минут"
+          summary: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} не готов'
+          description: 'Pod {{ $labels.namespace }}/{{ $labels.pod }} не может запуститься более 15 минут'
 
       # Deployment имеет недоступные реплики
       - alert: DeploymentReplicasMismatch
@@ -220,8 +220,8 @@ groups:
           severity: warning
           team: devops
         annotations:
-          summary: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} имеет недоступные реплики"
-          description: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }}: {{ $value }} реплик недоступны"
+          summary: 'Deployment {{ $labels.namespace }}/{{ $labels.deployment }} имеет недоступные реплики'
+          description: 'Deployment {{ $labels.namespace }}/{{ $labels.deployment }}: {{ $value }} реплик недоступны'
 
       # Node не готов
       - alert: KubernetesNodeNotReady
@@ -231,8 +231,8 @@ groups:
           severity: critical
           team: devops
         annotations:
-          summary: "Kubernetes node {{ $labels.node }} не готов"
-          description: "Node {{ $labels.node }} находится в состоянии NotReady более 5 минут"
+          summary: 'Kubernetes node {{ $labels.node }} не готов'
+          description: 'Node {{ $labels.node }} находится в состоянии NotReady более 5 минут'
 
       # Высокое использование CPU на node
       - alert: KubernetesNodeHighCPU
@@ -245,8 +245,8 @@ groups:
           severity: warning
           team: devops
         annotations:
-          summary: "Высокое использование CPU на node {{ $labels.node }}"
-          description: "Node {{ $labels.node }} использует более 80% CPU"
+          summary: 'Высокое использование CPU на node {{ $labels.node }}'
+          description: 'Node {{ $labels.node }} использует более 80% CPU'
 
   # Бизнес-метрики
   - name: business
@@ -261,8 +261,8 @@ groups:
           severity: info
           team: product
         annotations:
-          summary: "Низкая активность генерации QR кодов"
-          description: "Генерируется менее 1 QR кода в час последние 2 часа"
+          summary: 'Низкая активность генерации QR кодов'
+          description: 'Генерируется менее 1 QR кода в час последние 2 часа'
 
       # Высокая частота невалидных QR кодов
       - alert: HighInvalidQRCodes
@@ -277,6 +277,188 @@ groups:
           severity: warning
           team: product
         annotations:
-          summary: "Высокая частота невалидных QR кодов"
-          description: "Более 10% QR кодов не проходят валидацию"
+          summary: 'Высокая частота невалидных QR кодов'
+          description: 'Более 10% QR кодов не проходят валидацию'
 
+      # Высокий IDR (Invalid Data Rate)
+      - alert: HighIDR
+        expr: |
+          idr_rate{time_window="5m"} > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: 'Высокий IDR для {{ $labels.supplier }}'
+          description: 'IDR rate превышает 1% (текущее значение: {{ $value | humanizePercentage }}) для {{ $labels.supplier }}'
+          runbook_url: 'https://docs.znak-lavki.com/runbooks/high-idr'
+
+      # Критически высокий IDR
+      - alert: CriticalIDR
+        expr: |
+          idr_rate{time_window="5m"} > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: 'Критический IDR для {{ $labels.supplier }}'
+          description: 'IDR rate превышает 5% (текущее значение: {{ $value | humanizePercentage }}) - требуется немедленное вмешательство'
+
+      # Ошибки генерации марок
+      - alert: MarkGenerationFailure
+        expr: |
+          rate(mark_generation_errors_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: 'Высокая частота ошибок генерации марок'
+          description: 'Более 10 ошибок генерации марок в минуту для {{ $labels.supplier }} (тип: {{ $labels.error_type }})'
+
+      # Низкая успешность валидации
+      - alert: LowValidationSuccessRate
+        expr: |
+          (
+            rate(mark_validation_success_total[10m])
+            /
+            (rate(mark_validation_success_total[10m]) + rate(mark_validation_failure_total[10m]))
+          ) < 0.95
+        for: 15m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: 'Низкая успешность валидации марок'
+          description: 'Успешность валидации ниже 95% за последние 15 минут'
+
+      # Медленная валидация
+      - alert: SlowMarkValidation
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(mark_validation_duration_ms_bucket[5m])) by (le)
+          ) > 500
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: 'Медленная валидация марок'
+          description: '95 перцентиль времени валидации превышает 500ms'
+
+      # Много истекших марок
+      - alert: HighExpiredMarksCount
+        expr: |
+          expired_marks_count > 1000
+        for: 1h
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: 'Большое количество истекших марок'
+          description: 'Обнаружено {{ $value }} истекших марок для {{ $labels.supplier }}'
+
+      # Низкое покрытие системы
+      - alert: LowSystemCoverage
+        expr: |
+          system_coverage_percentage{coverage_type="suppliers"} < 70
+        for: 30m
+        labels:
+          severity: info
+          team: product
+        annotations:
+          summary: 'Низкое покрытие поставщиков'
+          description: 'Покрытие системы составляет только {{ $value }}%'
+
+      # Аномальный рост активных марок
+      - alert: AbnormalActiveMarksGrowth
+        expr: |
+          (
+            rate(active_marks_count[1h]) 
+            / 
+            active_marks_count offset 1h
+          ) > 0.5
+        for: 30m
+        labels:
+          severity: info
+          team: product
+        annotations:
+          summary: 'Аномальный рост активных марок'
+          description: 'Количество активных марок выросло более чем на 50% за час'
+
+      # Высокая частота блокировки марок
+      - alert: HighMarkBlockingRate
+        expr: |
+          rate(marks_blocked_total[5m]) > 5
+        for: 10m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          summary: 'Высокая частота блокировки марок'
+          description: 'Блокируется более 5 марок в минуту - возможна атака или системная проблема'
+
+  # Производительность и кэширование
+  - name: performance
+    interval: 30s
+    rules:
+      # Низкий hit rate кэша
+      - alert: LowCacheHitRate
+        expr: |
+          (
+            rate(cache_hits_total[5m])
+            /
+            (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m]))
+          ) < 0.7
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: 'Низкий hit rate кэша {{ $labels.cache_type }}'
+          description: 'Cache hit rate ниже 70% (текущее: {{ $value | humanizePercentage }})'
+
+      # Высокое использование пула соединений БД
+      - alert: DatabaseConnectionPool
+        expr: |
+          (
+            pg_stat_activity_count
+            /
+            pg_settings_max_connections
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: 'Высокое использование пула соединений'
+          description: 'Используется более 80% пула соединений БД ({{ $value }}%)'
+
+      # Критическое использование пула соединений
+      - alert: DatabaseConnectionPoolCritical
+        expr: |
+          (
+            pg_stat_activity_count
+            /
+            pg_settings_max_connections
+          ) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: 'Критическое использование пула соединений'
+          description: 'Используется более 95% пула соединений БД - риск отказа в обслуживании'
+
+      # Высокая нагрузка на HTTP endpoints
+      - alert: HighEndpointLoad
+        expr: |
+          rate(http_requests_total[5m]) > 1000
+        for: 5m
+        labels:
+          severity: info
+          team: devops
+        annotations:
+          summary: 'Высокая нагрузка на endpoint {{ $labels.endpoint }}'
+          description: 'Endpoint обрабатывает более 1000 запросов в минуту'

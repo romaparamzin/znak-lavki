@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Counter, Histogram, Registry, register } from 'prom-client';
+import { Counter, Histogram, Gauge, Registry, register } from 'prom-client';
 
 /**
  * Metrics Service
- * Handles Prometheus metrics collection
+ * Handles Prometheus metrics collection for business and system metrics
  */
 @Injectable()
 export class MetricsService {
@@ -23,10 +23,20 @@ export class MetricsService {
   private readonly cacheHits: Counter<string>;
   private readonly cacheMisses: Counter<string>;
 
+  // Business metrics
+  private readonly markGenerationErrors: Counter<string>;
+  private readonly markValidationSuccess: Counter<string>;
+  private readonly markValidationFailure: Counter<string>;
+  private readonly activeMarksGauge: Gauge<string>;
+  private readonly expiredMarksGauge: Gauge<string>;
+  private readonly validationDuration: Histogram<string>;
+  private readonly idrRateGauge: Gauge<string>;
+  private readonly systemCoverageGauge: Gauge<string>;
+
   constructor() {
     // Use default registry and clear it to avoid duplicate registration
     this.registry = register;
-    
+
     // Clear existing metrics to prevent duplicate registration errors
     this.registry.clear();
 
@@ -94,7 +104,65 @@ export class MetricsService {
       registers: [this.registry],
     });
 
-    this.logger.log('Metrics service initialized');
+    // Initialize business metrics
+    this.markGenerationErrors = new Counter({
+      name: 'mark_generation_errors_total',
+      help: 'Total number of mark generation errors',
+      labelNames: ['error_type', 'supplier'],
+      registers: [this.registry],
+    });
+
+    this.markValidationSuccess = new Counter({
+      name: 'mark_validation_success_total',
+      help: 'Total number of successful mark validations',
+      labelNames: ['supplier'],
+      registers: [this.registry],
+    });
+
+    this.markValidationFailure = new Counter({
+      name: 'mark_validation_failure_total',
+      help: 'Total number of failed mark validations',
+      labelNames: ['reason', 'supplier'],
+      registers: [this.registry],
+    });
+
+    this.activeMarksGauge = new Gauge({
+      name: 'active_marks_count',
+      help: 'Current number of active marks in the system',
+      labelNames: ['supplier', 'status'],
+      registers: [this.registry],
+    });
+
+    this.expiredMarksGauge = new Gauge({
+      name: 'expired_marks_count',
+      help: 'Current number of expired marks',
+      labelNames: ['supplier'],
+      registers: [this.registry],
+    });
+
+    this.validationDuration = new Histogram({
+      name: 'mark_validation_duration_ms',
+      help: 'Mark validation duration in milliseconds',
+      labelNames: ['result'],
+      buckets: [5, 10, 25, 50, 100, 250, 500, 1000],
+      registers: [this.registry],
+    });
+
+    this.idrRateGauge = new Gauge({
+      name: 'idr_rate',
+      help: 'Invalid Data Rate (IDR) - percentage of failed validations',
+      labelNames: ['supplier', 'time_window'],
+      registers: [this.registry],
+    });
+
+    this.systemCoverageGauge = new Gauge({
+      name: 'system_coverage_percentage',
+      help: 'Percentage of suppliers/products covered by the system',
+      labelNames: ['coverage_type'],
+      registers: [this.registry],
+    });
+
+    this.logger.log('Metrics service initialized with business metrics');
   }
 
   /**
@@ -170,5 +238,88 @@ export class MetricsService {
   getRegistry(): Registry {
     return this.registry;
   }
-}
 
+  /**
+   * Record mark generation error
+   */
+  recordMarkGenerationError(errorType: string, supplier: string): void {
+    this.markGenerationErrors.inc({ error_type: errorType, supplier });
+  }
+
+  /**
+   * Record mark validation result with duration
+   */
+  recordValidationTime(
+    duration: number,
+    result: 'success' | 'failure',
+    supplier?: string,
+    reason?: string,
+  ): void {
+    this.validationDuration.observe({ result }, duration);
+
+    if (result === 'success') {
+      this.markValidationSuccess.inc({ supplier: supplier || 'unknown' });
+    } else {
+      this.markValidationFailure.inc({
+        reason: reason || 'unknown',
+        supplier: supplier || 'unknown',
+      });
+    }
+  }
+
+  /**
+   * Update active marks count
+   */
+  updateActiveMarksCount(count: number, supplier?: string, status?: string): void {
+    this.activeMarksGauge.set(
+      {
+        supplier: supplier || 'all',
+        status: status || 'active',
+      },
+      count,
+    );
+  }
+
+  /**
+   * Update expired marks count
+   */
+  updateExpiredMarksCount(count: number, supplier?: string): void {
+    this.expiredMarksGauge.set({ supplier: supplier || 'all' }, count);
+  }
+
+  /**
+   * Calculate and update IDR (Invalid Data Rate)
+   */
+  updateIDRRate(
+    failedCount: number,
+    totalCount: number,
+    supplier?: string,
+    timeWindow?: string,
+  ): void {
+    const idrRate = totalCount > 0 ? failedCount / totalCount : 0;
+    this.idrRateGauge.set(
+      {
+        supplier: supplier || 'all',
+        time_window: timeWindow || '5m',
+      },
+      idrRate,
+    );
+  }
+
+  /**
+   * Update system coverage percentage
+   */
+  updateSystemCoverage(
+    percentage: number,
+    coverageType: 'suppliers' | 'products' | 'categories',
+  ): void {
+    this.systemCoverageGauge.set({ coverage_type: coverageType }, percentage);
+  }
+
+  /**
+   * Collect mark generated with supplier tracking
+   */
+  collectMarkGenerated(count: number, supplier: string): void {
+    this.recordMarkGeneration(supplier, count);
+  }
+}
