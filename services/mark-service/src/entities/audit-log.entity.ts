@@ -90,7 +90,7 @@ export class AuditLog {
   @Column({ type: 'text', nullable: true })
   reason: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
 
