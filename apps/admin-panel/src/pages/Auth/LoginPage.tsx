@@ -123,29 +123,35 @@ const LoginPage = () => {
             Войти через Yandex
           </Button>
 
-          {/* Development Mode Login */}
-          <Button
-            size="large"
-            onClick={handleDevLogin}
-            block
-            style={{
-              marginTop: 8,
-              borderStyle: 'dashed',
-              backgroundColor: '#f0f2f5',
-            }}
-          >
-            🔧 Режим разработки (без OAuth)
-          </Button>
+          {/* Development Mode Login - Only in development */}
+          {import.meta.env.DEV && (
+            <Button
+              size="large"
+              onClick={handleDevLogin}
+              block
+              style={{
+                marginTop: 8,
+                borderStyle: 'dashed',
+                backgroundColor: '#f0f2f5',
+              }}
+            >
+              🔧 Режим разработки (без OAuth)
+            </Button>
+          )}
 
           {/* Info */}
           <div style={{ textAlign: 'center' }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
               Вход осуществляется через OAuth Yandex
             </Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 11, color: '#ff4d4f' }}>
-              Режим разработки для тестирования без OAuth
-            </Text>
+            {import.meta.env.DEV && (
+              <>
+                <br />
+                <Text type="secondary" style={{ fontSize: 11, color: '#ff4d4f' }}>
+                  Режим разработки для тестирования без OAuth
+                </Text>
+              </>
+            )}
           </div>
         </Space>
       </Card>

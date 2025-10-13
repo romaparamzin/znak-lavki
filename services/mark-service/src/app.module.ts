@@ -7,6 +7,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { QrModule } from './qr/qr.module';
+import { MarkModule } from './modules/mark.module';
+import { DashboardModule } from './modules/dashboard.module';
 import { QualityMark } from './entities/quality-mark.entity';
 import { AuditLog } from './entities/audit-log.entity';
 
@@ -51,7 +53,7 @@ import { AuditLog } from './entities/audit-log.entity';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const redisEnabled = configService.get('REDIS_ENABLED', 'true') === 'true';
-        
+
         if (redisEnabled) {
           // Redis configuration
           return {
@@ -88,10 +90,10 @@ import { AuditLog } from './entities/audit-log.entity';
 
     // Feature modules
     QrModule,
+    MarkModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
-
-

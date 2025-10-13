@@ -3,7 +3,7 @@
  * Main dashboard with metrics and charts
  */
 
-import { Row, Col, Card, Statistic, Typography, Spin, Space } from 'antd';
+import { Row, Col, Card, Statistic, Typography, Spin, Space, Alert } from 'antd';
 import {
   QrcodeOutlined,
   CheckCircleOutlined,
@@ -11,25 +11,15 @@ import {
   ClockCircleOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
+import { useDashboardMetrics } from '../../hooks/useDashboard';
 
 const { Title } = Typography;
 
-// Mock data - replace with real API calls
-const mockMetrics = {
-  totalMarks: 45230,
-  activeMarks: 38920,
-  blockedMarks: 1250,
-  expiredMarks: 5060,
-  todayGenerated: 1240,
-  todayValidated: 3450,
-  generatedTrend: 12.5, // %
-  validatedTrend: -3.2, // %
-};
-
 const Dashboard = () => {
-  // In real app, fetch data with React Query:
-  // const { data, isLoading } = useQuery(['dashboard-metrics'], fetchMetrics);
+  // Fetch real data from API
+  const { data: metrics, isLoading, error } = useDashboardMetrics();
 
   const MetricCard = ({
     title,
@@ -71,6 +61,32 @@ const Dashboard = () => {
     </Card>
   );
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 0' }}>
+        <Spin size="large" indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+        <div style={{ marginTop: 20, fontSize: 16 }}>Загрузка данных дашборда...</div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div>
+        <Title level={2}>Дашборд</Title>
+        <Alert
+          message="Ошибка загрузки данных"
+          description={(error as Error).message}
+          type="error"
+          showIcon
+          style={{ marginBottom: 24 }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Title level={2}>Дашборд</Title>
@@ -80,28 +96,28 @@ const Dashboard = () => {
         <Col xs={24} sm={12} lg={6}>
           <MetricCard
             title="Всего марок"
-            value={mockMetrics.totalMarks}
+            value={metrics?.totalMarks || 0}
             icon={<QrcodeOutlined />}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <MetricCard
             title="Активные"
-            value={mockMetrics.activeMarks}
+            value={metrics?.activeMarks || 0}
             icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <MetricCard
             title="Заблокированные"
-            value={mockMetrics.blockedMarks}
+            value={metrics?.blockedMarks || 0}
             icon={<StopOutlined style={{ color: '#faad14' }} />}
           />
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <MetricCard
             title="Истекшие"
-            value={mockMetrics.expiredMarks}
+            value={metrics?.expiredMarks || 0}
             icon={<ClockCircleOutlined style={{ color: '#ff4d4f' }} />}
           />
         </Col>
@@ -112,17 +128,17 @@ const Dashboard = () => {
         <Col xs={24} sm={12}>
           <MetricCard
             title="Сгенерировано сегодня"
-            value={mockMetrics.todayGenerated}
+            value={metrics?.todayGenerated || 0}
             icon={<QrcodeOutlined />}
-            trend={mockMetrics.generatedTrend}
+            trend={metrics?.generatedTrend}
           />
         </Col>
         <Col xs={24} sm={12}>
           <MetricCard
             title="Валидировано сегодня"
-            value={mockMetrics.todayValidated}
+            value={metrics?.todayValidated || 0}
             icon={<CheckCircleOutlined />}
-            trend={mockMetrics.validatedTrend}
+            trend={metrics?.validatedTrend}
           />
         </Col>
       </Row>
@@ -131,21 +147,31 @@ const Dashboard = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card title="Тренды генерации" bordered={false}>
-            <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div
+              style={{
+                height: 300,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               {/* Add Recharts LineChart here */}
-              <Typography.Text type="secondary">
-                График трендов (добавить Recharts)
-              </Typography.Text>
+              <Typography.Text type="secondary">График трендов (добавить Recharts)</Typography.Text>
             </div>
           </Card>
         </Col>
         <Col xs={24} lg={12}>
           <Card title="Распределение по статусам" bordered={false}>
-            <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div
+              style={{
+                height: 300,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               {/* Add Recharts PieChart here */}
-              <Typography.Text type="secondary">
-                Pie chart (добавить Recharts)
-              </Typography.Text>
+              <Typography.Text type="secondary">Pie chart (добавить Recharts)</Typography.Text>
             </div>
           </Card>
         </Col>
@@ -155,5 +181,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-

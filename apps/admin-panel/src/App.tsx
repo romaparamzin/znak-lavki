@@ -22,6 +22,7 @@ const MarksPage = lazy(() => import('./pages/Marks/MarksPage'));
 const Analytics = lazy(() => import('./pages/Analytics/Analytics'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const AuditLog = lazy(() => import('./pages/AuditLog/AuditLog'));
+const ResponsiveTest = lazy(() => import('./pages/ResponsiveTest'));
 const AppLayout = lazy(() => import('./components/Layout/AppLayout'));
 
 // Create React Query client
@@ -37,12 +38,14 @@ const queryClient = new QueryClient({
 
 // Loading fallback
 const PageLoader = () => (
-  <div style={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    height: '100vh' 
-  }}>
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+    }}
+  >
     <Spin size="large" />
   </div>
 );
@@ -50,11 +53,11 @@ const PageLoader = () => (
 // Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuthStore();
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
@@ -102,6 +105,7 @@ function App() {
                   <Route path="analytics" element={<Analytics />} />
                   <Route path="audit" element={<AuditLog />} />
                   <Route path="settings" element={<Settings />} />
+                  <Route path="responsive-test" element={<ResponsiveTest />} />
                 </Route>
 
                 {/* 404 */}

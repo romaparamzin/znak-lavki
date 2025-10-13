@@ -4,9 +4,6 @@
  * Fully responsive for mobile, tablet, and desktop
  */
 
-import { useState } from 'react';
-import { Table, Card, Space, Button, Input, Select, Tag, Dropdown, message, Grid } from 'antd';
-import type { MenuProps } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
@@ -15,69 +12,39 @@ import {
   ExportOutlined,
   DownOutlined,
   FilterOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
-import type { MarkStatus } from '../../types/mark.types';
-import { useExport } from '../../hooks/useExport';
-import { useGenerateMarks } from '../../hooks/useMarks';
+import {
+  Table,
+  Card,
+  Space,
+  Button,
+  Input,
+  Select,
+  Tag,
+  Dropdown,
+  message,
+  Grid,
+  Spin,
+} from 'antd';
+import type { MenuProps } from 'antd';
+import { useState } from 'react';
+
 import { GenerateMarksModal } from '../../components/Marks/GenerateMarksModal';
+import { useExport } from '../../hooks/useExport';
+import {
+  useMarks,
+  useGenerateMarks,
+  useBulkBlockMarks,
+  useBulkUnblockMarks,
+  useBlockMark,
+  useUnblockMark,
+} from '../../hooks/useMarks';
+import type { MarkStatus } from '../../types/mark.types';
 
 const { Search } = Input;
 const { Option } = Select;
 const { useBreakpoint } = Grid;
-
-// Mock data - replace with React Query
-const mockMarks = [
-  {
-    id: '1',
-    markCode: '99LAV0460717796408966LAV1234567890ABCDEF',
-    gtin: '04607177964089',
-    status: 'active' as MarkStatus,
-    productionDate: '2025-10-10',
-    expiryDate: '2026-10-10',
-    validationCount: 5,
-    createdAt: '2025-10-10T12:00:00Z',
-  },
-  {
-    id: '2',
-    markCode: '99LAV0460717796408966LAV9876543210FEDCBA',
-    gtin: '04607177964089',
-    status: 'blocked' as MarkStatus,
-    productionDate: '2025-10-09',
-    expiryDate: '2026-10-09',
-    validationCount: 12,
-    createdAt: '2025-10-09T10:30:00Z',
-  },
-  {
-    id: '3',
-    markCode: '99LAV0460717796408966LAV5555666677778888',
-    gtin: '04607177964089',
-    status: 'active' as MarkStatus,
-    productionDate: '2025-10-08',
-    expiryDate: '2026-10-08',
-    validationCount: 3,
-    createdAt: '2025-10-08T14:15:00Z',
-  },
-  {
-    id: '4',
-    markCode: '99LAV0460717796408966LAV9999000011112222',
-    gtin: '04607177964089',
-    status: 'used' as MarkStatus,
-    productionDate: '2025-10-07',
-    expiryDate: '2026-10-07',
-    validationCount: 25,
-    createdAt: '2025-10-07T09:20:00Z',
-  },
-  {
-    id: '5',
-    markCode: '99LAV0460717796408966LAV3333444455556666',
-    gtin: '04607177964089',
-    status: 'expired' as MarkStatus,
-    productionDate: '2024-01-01',
-    expiryDate: '2025-01-01',
-    validationCount: 0,
-    createdAt: '2024-01-01T08:00:00Z',
-  },
-];
 
 const MarksPage = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -95,11 +62,24 @@ const MarksPage = () => {
   const isMobile = !screens.md; // md breakpoint is 768px
   const isTablet = screens.md && !screens.lg; // lg breakpoint is 992px
 
+  // Fetch marks from API
+  const { data: marksData, isLoading, error, refetch } = useMarks(filters);
+  const marks = marksData?.data || [];
+  const total = marksData?.total || 0;
+
   // Export hook
   const { exportData, isExporting } = useExport();
 
   // Generate marks mutation
   const generateMarksMutation = useGenerateMarks();
+
+  // Bulk operations mutations
+  const bulkBlockMutation = useBulkBlockMarks();
+  const bulkUnblockMutation = useBulkUnblockMarks();
+
+  // Single mark operations mutations
+  const blockMarkMutation = useBlockMark();
+  const unblockMarkMutation = useUnblockMark();
 
   const statusColors = {
     active: 'success',
@@ -108,24 +88,108 @@ const MarksPage = () => {
     used: 'processing',
   };
 
+  const statusLabels: Record<MarkStatus, string> = {
+    active: 'Активная',
+    blocked: 'Заблокирована',
+    expired: 'Истекла',
+    used: 'Использована',
+  };
+
   // Handle export
   const handleExport = (format: 'csv' | 'excel' | 'pdf') => {
-    if (mockMarks.length === 0) {
+    if (marks.length === 0) {
       message.warning('Нет данных для экспорта');
       return;
     }
-    exportData(mockMarks, format, 'quality-marks');
+    exportData(marks, format, 'quality-marks');
   };
 
   // Handle generate marks
   const handleGenerateMarks = async (values: any) => {
     try {
+      // Real API mode - backend is running
       await generateMarksMutation.mutateAsync(values);
       setGenerateModalVisible(false);
-      // Reload marks list here when using real API
-    } catch (error) {
+      message.success(`✅ Успешно создано ${values.quantity} марок!`);
+      // Reload marks list
+      refetch();
+    } catch (error: any) {
       // Error is handled by the mutation hook
       console.error('Generate marks error:', error);
+      const errorMsg = error?.response?.data?.message || error?.message || 'Ошибка создания марок';
+      message.error(errorMsg);
+    }
+  };
+
+  // Handle bulk block
+  const handleBulkBlock = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('Выберите марки для блокировки');
+      return;
+    }
+
+    // Get markCodes from selected rows
+    const selectedMarks = marks.filter((mark) => selectedRowKeys.includes(mark.id));
+    const markCodes = selectedMarks.map((mark) => mark.markCode);
+
+    try {
+      await bulkBlockMutation.mutateAsync({
+        markCodes,
+        reason: 'Массовая блокировка',
+      });
+      setSelectedRowKeys([]);
+      refetch();
+    } catch (error: any) {
+      console.error('Bulk block error:', error);
+    }
+  };
+
+  // Handle bulk unblock
+  const handleBulkUnblock = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('Выберите марки для разблокировки');
+      return;
+    }
+
+    // Get markCodes from selected rows
+    const selectedMarks = marks.filter((mark) => selectedRowKeys.includes(mark.id));
+    const markCodes = selectedMarks.map((mark) => mark.markCode);
+
+    try {
+      await bulkUnblockMutation.mutateAsync({
+        markCodes,
+        reason: 'Массовая разблокировка',
+      });
+      setSelectedRowKeys([]);
+      refetch();
+    } catch (error: any) {
+      console.error('Bulk unblock error:', error);
+    }
+  };
+
+  // Handle single mark block
+  const handleBlockMark = async (markCode: string) => {
+    try {
+      await blockMarkMutation.mutateAsync({
+        markCode,
+        reason: 'Блокировка',
+      });
+      refetch();
+    } catch (error: any) {
+      console.error('Block mark error:', error);
+    }
+  };
+
+  // Handle single mark unblock
+  const handleUnblockMark = async (markCode: string) => {
+    try {
+      await unblockMarkMutation.mutateAsync({
+        markCode,
+        reason: 'Разблокировка',
+      });
+      refetch();
+    } catch (error: any) {
+      console.error('Unblock mark error:', error);
     }
   };
 
@@ -169,11 +233,9 @@ const MarksPage = () => {
       title: 'Статус',
       dataIndex: 'status',
       key: 'status',
-      width: isMobile ? 100 : 120,
+      width: isMobile ? 120 : 140,
       render: (status: MarkStatus) => (
-        <Tag color={statusColors[status]}>
-          {isMobile ? status.charAt(0).toUpperCase() : status.toUpperCase()}
-        </Tag>
+        <Tag color={statusColors[status]}>{statusLabels[status] || status}</Tag>
       ),
     },
     {
@@ -209,19 +271,21 @@ const MarksPage = () => {
               size="small"
               danger
               icon={isMobile ? <StopOutlined /> : undefined}
-              onClick={() => console.log('Block:', record.id)}
+              onClick={() => handleBlockMark(record.markCode)}
+              loading={blockMarkMutation.isPending}
             >
               {!isMobile && 'Блок'}
             </Button>
-          ) : (
+          ) : record.status === 'blocked' ? (
             <Button
               size="small"
               icon={isMobile ? <CheckCircleOutlined /> : undefined}
-              onClick={() => console.log('Unblock:', record.id)}
+              onClick={() => handleUnblockMark(record.markCode)}
+              loading={unblockMarkMutation.isPending}
             >
               {!isMobile && 'Разблок'}
             </Button>
-          )}
+          ) : null}
         </Space>
       ),
     },
@@ -291,7 +355,7 @@ const MarksPage = () => {
 
               <Select
                 placeholder="Статус"
-                style={{ width: isMobile ? '100%' : 150 }}
+                style={{ width: isMobile ? '100%' : 180 }}
                 size={isMobile ? 'middle' : 'large'}
                 allowClear
                 onChange={(status) => setFilters({ ...filters, status })}
@@ -316,7 +380,8 @@ const MarksPage = () => {
             <Button
               danger
               icon={<StopOutlined />}
-              onClick={() => console.log('Bulk block:', selectedRowKeys)}
+              onClick={handleBulkBlock}
+              loading={bulkBlockMutation.isPending}
               size={isMobile ? 'small' : 'middle'}
               block={isMobile}
             >
@@ -325,7 +390,8 @@ const MarksPage = () => {
                 : `Заблокировать выбранные (${selectedRowKeys.length})`}
             </Button>
             <Button
-              onClick={() => console.log('Bulk unblock:', selectedRowKeys)}
+              onClick={handleBulkUnblock}
+              loading={bulkUnblockMutation.isPending}
               size={isMobile ? 'small' : 'middle'}
               block={isMobile}
             >
@@ -336,23 +402,47 @@ const MarksPage = () => {
           </Space>
         )}
 
+        {/* Loading spinner */}
+        {isLoading && (
+          <div style={{ textAlign: 'center', padding: '50px' }}>
+            <Spin size="large" indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+            <div style={{ marginTop: 20, fontSize: 16 }}>Загрузка марок...</div>
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div style={{ textAlign: 'center', padding: '50px', color: '#ff4d4f' }}>
+            <div style={{ fontSize: 18, marginBottom: 10 }}>❌ Ошибка загрузки данных</div>
+            <div>{(error as Error).message}</div>
+            <Button type="primary" onClick={() => refetch()} style={{ marginTop: 20 }}>
+              Повторить попытку
+            </Button>
+          </div>
+        )}
+
         {/* Table */}
-        <Table
-          rowSelection={isMobile ? undefined : rowSelection}
-          columns={columns}
-          dataSource={mockMarks}
-          rowKey="id"
-          scroll={{ x: isMobile ? 600 : undefined }}
-          size={isMobile ? 'small' : 'middle'}
-          pagination={{
-            current: filters.page,
-            pageSize: isMobile ? 10 : filters.limit,
-            total: mockMarks.length,
-            showSizeChanger: !isMobile,
-            showTotal: (total) => `Всего: ${total}`,
-            simple: isMobile,
-          }}
-        />
+        {!isLoading && !error && (
+          <Table
+            rowSelection={isMobile ? undefined : rowSelection}
+            columns={columns}
+            dataSource={marks}
+            rowKey="id"
+            scroll={{ x: isMobile ? 600 : undefined }}
+            size={isMobile ? 'small' : 'middle'}
+            pagination={{
+              current: filters.page,
+              pageSize: isMobile ? 10 : filters.limit,
+              total: total,
+              showSizeChanger: !isMobile,
+              showTotal: (total) => `Всего: ${total}`,
+              simple: isMobile,
+              onChange: (page, pageSize) => {
+                setFilters({ ...filters, page, limit: pageSize || 20 });
+              },
+            }}
+          />
+        )}
       </Card>
 
       {/* Generate Marks Modal */}
