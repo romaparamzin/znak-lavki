@@ -5,7 +5,7 @@
 ### 1. Database Schema (PostgreSQL + TypeORM)
 
 #### Entities:
-- ✅ `QualityMark` - Основная сущность метки
+- ✅ `QualityMark` - Основная сущность марки
   - UUID primary key
   - Unique mark code (формат: 99LAV{GTIN}66LAV{16-chars})
   - GTIN (product barcode)

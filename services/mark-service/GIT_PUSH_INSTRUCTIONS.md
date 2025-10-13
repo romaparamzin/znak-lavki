@@ -111,12 +111,12 @@ git push --force origin main
 ### Что было добавлено:
 
 #### 🗄️ Database (2 файла)
-- `quality-mark.entity.ts` - Сущность метки
+- `quality-mark.entity.ts` - Сущность марки
 - `audit-log.entity.ts` - Журнал аудита
 
 #### 🔧 Services (8 файлов)
 - `mark.service.ts` - Главный сервис (751 строка)
-- `mark-generator.service.ts` - Генерация меток
+- `mark-generator.service.ts` - Генерация марок
 - `qr-code.service.ts` - QR-коды
 - `cache.service.ts` - Кэширование
 - `audit.service.ts` - Аудит

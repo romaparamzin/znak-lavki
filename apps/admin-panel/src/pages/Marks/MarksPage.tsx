@@ -50,7 +50,7 @@ const MarksPage = () => {
 
   const columns = [
     {
-      title: 'Код метки',
+      title: 'Код марки',
       dataIndex: 'markCode',
       key: 'markCode',
       ellipsis: true,
@@ -122,7 +122,7 @@ const MarksPage = () => {
   return (
     <div>
       <Card
-        title="Управление метками"
+        title="Управление марками"
         extra={
           <Space>
             <Button
@@ -130,7 +130,7 @@ const MarksPage = () => {
               icon={<PlusOutlined />}
               onClick={() => console.log('Generate marks')}
             >
-              Создать метки
+              Создать марки
             </Button>
             <Button
               icon={<ExportOutlined />}
@@ -144,7 +144,7 @@ const MarksPage = () => {
         {/* Filters */}
         <Space style={{ marginBottom: 16, width: '100%' }} size="middle">
           <Search
-            placeholder="Поиск по коду метки..."
+            placeholder="Поиск по коду марки..."
             allowClear
             style={{ width: 300 }}
             onSearch={(value) => setFilters({ ...filters, search: value })}

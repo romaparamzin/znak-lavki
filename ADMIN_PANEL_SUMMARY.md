@@ -87,7 +87,7 @@
      - Placeholders для графиков
    
    **Marks Management**:
-   - ✅ `MarksPage.tsx` - Управление метками:
+   - ✅ `MarksPage.tsx` - Управление марками:
      - Таблица с пагинацией
      - Фильтры (search, status)
      - Row selection для bulk operations

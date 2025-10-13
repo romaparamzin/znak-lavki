@@ -62,7 +62,7 @@ const AppLayout = () => {
     {
       key: '/marks',
       icon: <QrcodeOutlined />,
-      label: 'Метки',
+      label: 'Марки',
     },
     {
       key: '/analytics',

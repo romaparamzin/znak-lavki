@@ -60,7 +60,7 @@ function setupEventListeners(queryClient: any) {
     wsClient.on(WSEvent.MARK_CREATED, (data: any) => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
-      message.info(`Создана новая метка: ${data.markCode}`);
+      message.info(`Создана новая марка: ${data.markCode}`);
     })
   );
 
@@ -76,7 +76,7 @@ function setupEventListeners(queryClient: any) {
   unsubscribers.push(
     wsClient.on(WSEvent.MARK_BLOCKED, (data: any) => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
-      message.warning(`Метка заблокирована: ${data.markCode}`);
+      message.warning(`Марка заблокирована: ${data.markCode}`);
     })
   );
 
@@ -84,7 +84,7 @@ function setupEventListeners(queryClient: any) {
   unsubscribers.push(
     wsClient.on(WSEvent.MARKS_BULK_BLOCKED, (data: { count: number }) => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
-      message.warning(`Заблокировано меток: ${data.count}`);
+      message.warning(`Заблокировано марок: ${data.count}`);
     })
   );
 
@@ -94,7 +94,7 @@ function setupEventListeners(queryClient: any) {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
       if (data.count > 0) {
-        message.info(`Истекло меток: ${data.count}`);
+        message.info(`Истекло марок: ${data.count}`);
       }
     })
   );

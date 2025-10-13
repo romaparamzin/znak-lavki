@@ -108,7 +108,7 @@ const LoginPage = () => {
             <Title level={2} style={{ marginTop: 16 }}>
               Знак Лавки
             </Title>
-            <Text type="secondary">Административная панель управления метками</Text>
+            <Text type="secondary">Административная панель управления марками</Text>
           </div>
 
           {/* Login button */}

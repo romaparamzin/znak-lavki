@@ -46,7 +46,7 @@ export const BulkBlockModal = ({
       title={
         <Space>
           <ExclamationCircleOutlined style={{ color: '#faad14' }} />
-          <span>Массовая блокировка меток</span>
+          <span>Массовая блокировка марок</span>
         </Space>
       }
       open={visible}
@@ -60,14 +60,14 @@ export const BulkBlockModal = ({
     >
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <Alert
-          message={`Вы собираетесь заблокировать ${markCodes.length} меток`}
+          message={`Вы собираетесь заблокировать ${markCodes.length} марок`}
           description="Это действие можно будет отменить позже"
           type="warning"
           showIcon
         />
 
         <div>
-          <Text strong>Выбрано меток: {markCodes.length}</Text>
+          <Text strong>Выбрано марок: {markCodes.length}</Text>
           {markCodes.length <= 5 && (
             <ul style={{ marginTop: 8 }}>
               {markCodes.map((code) => (

@@ -233,8 +233,8 @@ curl http://localhost:9600/_node/stats
 ## Best Practices
 
 1. **Метрики**
-   - Используйте метки (labels) разумно
-   - Избегайте high cardinality меток
+   - Используйте марки (labels) разумно
+   - Избегайте high cardinality марок
    - Используйте rate() для counter метрик
 
 2. **Алерты**

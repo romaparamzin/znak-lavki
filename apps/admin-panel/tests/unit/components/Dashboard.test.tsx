@@ -16,7 +16,7 @@ describe('Dashboard', () => {
     render(<Dashboard />);
     
     // Check for metric titles
-    expect(screen.getByText('Всего меток')).toBeInTheDocument();
+    expect(screen.getByText('Всего марок')).toBeInTheDocument();
     expect(screen.getByText('Активные')).toBeInTheDocument();
     expect(screen.getByText('Заблокированные')).toBeInTheDocument();
     expect(screen.getByText('Истекшие')).toBeInTheDocument();

@@ -14,7 +14,7 @@ const Analytics = () => {
 
       <Row gutter={[16, 16]}>
         <Col span={24}>
-          <Card title="Тренды генерации меток">
+          <Card title="Тренды генерации марок">
             {/* TODO: Add Recharts LineChart */}
             <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               Здесь будет график трендов (Recharts)

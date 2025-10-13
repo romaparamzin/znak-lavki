@@ -12,7 +12,7 @@
    - ✅ `playwright.config.ts` - E2E тесты
 
 2. **📐 Types & Config**
-   - ✅ `types/mark.types.ts` - полные типы меток
+   - ✅ `types/mark.types.ts` - полные типы марок
    - ✅ `types/auth.types.ts` - типы аутентификации
    - ✅ `config/api.config.ts` - API endpoints и настройки
 
@@ -31,7 +31,7 @@
 6. **📄 Pages**
    - ✅ `pages/Auth/LoginPage.tsx` - OAuth login
    - ✅ `pages/Dashboard/Dashboard.tsx` - дашборд с метриками
-   - ✅ `pages/Marks/MarksPage.tsx` - управление метками
+   - ✅ `pages/Marks/MarksPage.tsx` - управление марками
    - ✅ `pages/Analytics/Analytics.tsx` - аналитика
    - ✅ `pages/Settings/Settings.tsx` - настройки
    - ✅ `pages/AuditLog/AuditLog.tsx` - аудит
@@ -160,7 +160,7 @@ export const BulkBlockModal = ({ visible, marks, onConfirm, onCancel }: Props) =
 
   return (
     <Modal
-      title={`Заблокировать ${marks.length} меток`}
+      title={`Заблокировать ${marks.length} марок`}
       open={visible}
       onCancel={onCancel}
       onOk={form.submit}
@@ -316,7 +316,7 @@ import { test, expect } from '@playwright/test';
 
 test('user can navigate to marks page', async ({ page }) => {
   await page.goto('/');
-  await page.click('text=Метки');
+  await page.click('text=Марки');
   await expect(page).toHaveURL('/marks');
 });
 ```

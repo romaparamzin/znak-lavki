@@ -36,7 +36,7 @@ test.describe('Dashboard', () => {
     await page.goto('/dashboard');
     
     // Check for metric titles
-    await expect(page.getByText('Всего меток')).toBeVisible();
+    await expect(page.getByText('Всего марок')).toBeVisible();
     await expect(page.getByText('Активные')).toBeVisible();
     await expect(page.getByText('Заблокированные')).toBeVisible();
     await expect(page.getByText('Истекшие')).toBeVisible();
@@ -45,8 +45,8 @@ test.describe('Dashboard', () => {
   test('should have working sidebar navigation', async ({ page }) => {
     await page.goto('/dashboard');
     
-    // Click on "Метки" in sidebar
-    await page.click('text=Метки');
+    // Click on "Марки" in sidebar
+    await page.click('text=Марки');
     await expect(page).toHaveURL(/\/marks/);
     
     // Click on "Аналитика"

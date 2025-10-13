@@ -82,7 +82,7 @@
    - Vite, TypeScript, test configs
 
 2. ✅ Type System
-   - mark.types.ts - полные типы меток
+   - mark.types.ts - полные типы марок
    - auth.types.ts - типы аутентификации
 
 3. ✅ Core Infrastructure

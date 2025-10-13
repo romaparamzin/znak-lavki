@@ -83,7 +83,7 @@ export const useExport = () => {
       
       // Add title
       doc.setFontSize(16);
-      doc.text('Качественные метки', 14, 15);
+      doc.text('Качественные марки', 14, 15);
       
       // Add generation date
       doc.setFontSize(10);
@@ -101,7 +101,7 @@ export const useExport = () => {
       // Add table
       autoTable(doc, {
         startY: 28,
-        head: [['Код метки', 'GTIN', 'Статус', 'Дата производства', 'Срок годности']],
+        head: [['Код марки', 'GTIN', 'Статус', 'Дата производства', 'Срок годности']],
         body: tableData,
         styles: { 
           font: 'helvetica',

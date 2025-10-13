@@ -6,16 +6,16 @@
 **Файлы**: `src/hooks/useMarks.ts`, `src/hooks/useMetrics.ts`
 
 **Реализовано**:
-- ✅ `useMarks()` - получение меток с пагинацией и фильтрами
-- ✅ `useMark()` - получение одной метки по ID
-- ✅ `useMarkByCode()` - получение метки по коду
-- ✅ `useExpiringMarks()` - истекающие метки
-- ✅ `useGenerateMarks()` - генерация меток с мутацией
+- ✅ `useMarks()` - получение марок с пагинацией и фильтрами
+- ✅ `useMark()` - получение одной марки по ID
+- ✅ `useMarkByCode()` - получение марки по коду
+- ✅ `useExpiringMarks()` - истекающие марки
+- ✅ `useGenerateMarks()` - генерация марок с мутацией
 - ✅ `useBlockMark()` - блокировка с оптимистичным обновлением
 - ✅ `useUnblockMark()` - разблокировка
 - ✅ `useBulkBlockMarks()` - массовая блокировка
 - ✅ `useBulkUnblockMarks()` - массовая разблокировка
-- ✅ `useValidateMark()` - валидация метки
+- ✅ `useValidateMark()` - валидация марки
 - ✅ `useDashboardMetrics()` - метрики с auto-refetch (30 сек)
 - ✅ `useAnalyticsTrends()` - тренды для графиков
 - ✅ `useStatusDistribution()` - распределение по статусам
@@ -39,9 +39,9 @@
 
 **Реализовано**:
 - ✅ **TrendsChart** - Line chart с тремя линиями:
-  - Созданные метки (синий)
-  - Валидированные метки (зеленый)
-  - Заблокированные метки (красный)
+  - Созданные марки (синий)
+  - Валидированные марки (зеленый)
+  - Заблокированные марки (красный)
   - CartesianGrid, Tooltip, Legend
   - Responsive container
   
@@ -52,7 +52,7 @@
   - Legend с цветами
   
 - ✅ **ValidationBarChart** - Bar chart:
-  - Валидные vs Невалидные метки
+  - Валидные vs Невалидные марки
   - Grouped bars
   - Color coding (зеленый/красный)
 
@@ -115,11 +115,11 @@
   - Toast notifications для событий
   
 - ✅ **События** (WSEvent enum):
-  - `MARK_CREATED` - новая метка создана
-  - `MARK_UPDATED` - метка обновлена
-  - `MARK_BLOCKED` - метка заблокирована
-  - `MARK_UNBLOCKED` - метка разблокирована
-  - `MARK_EXPIRED` - метки истекли
+  - `MARK_CREATED` - новая марка создана
+  - `MARK_UPDATED` - марка обновлена
+  - `MARK_BLOCKED` - марка заблокирована
+  - `MARK_UNBLOCKED` - марка разблокирована
+  - `MARK_EXPIRED` - марки истекли
   - `MARKS_BULK_BLOCKED` - массовая блокировка
   - `METRICS_UPDATED` - метрики обновлены
   - `NOTIFICATION` - системные уведомления
@@ -166,11 +166,11 @@
 ### Модальные окна:
 - ✅ **BulkBlockModal** - массовая блокировка:
   - Form validation (min 10, max 500 символов)
-  - Alert с количеством меток
-  - Preview выбранных меток (если ≤5)
+  - Alert с количеством марок
+  - Preview выбранных марок (если ≤5)
   - Danger confirmation button
   
-- ✅ **GenerateMarksModal** - генерация меток:
+- ✅ **GenerateMarksModal** - генерация марок:
   - GTIN validation (8, 12, 13, 14 цифр)
   - Quantity validation (1-10,000)
   - Date range picker (production + expiry)

@@ -10,7 +10,7 @@
 ### Что было добавлено:
 
 #### React Query Hooks (5 файлов):
-- `src/hooks/useMarks.ts` - все операции с метками
+- `src/hooks/useMarks.ts` - все операции с марками
 - `src/hooks/useMetrics.ts` - дашборд метрики
 - `src/hooks/useExport.ts` - экспорт CSV/Excel/PDF
 - `src/hooks/useWebSocket.ts` - WebSocket hook

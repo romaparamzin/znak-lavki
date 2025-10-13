@@ -8,7 +8,7 @@
 
 ### Что было добавлено:
 - Database schema (PostgreSQL + TypeORM)
-- Сервисы генерации и валидации меток
+- Сервисы генерации и валидации марок
 - REST API с 11 эндпоинтами
 - QR code generation с логотипом
 - Redis caching

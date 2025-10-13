@@ -90,10 +90,10 @@ export const useGenerateMarks = () => {
       apiClient.post<GenerateMarkResponse>(API_ENDPOINTS.MARKS.GENERATE, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
-      message.success(`Успешно создано ${data.count} меток`);
+      message.success(`Успешно создано ${data.count} марок`);
     },
     onError: (error: Error) => {
-      message.error(`Ошибка создания меток: ${error.message}`);
+      message.error(`Ошибка создания марок: ${error.message}`);
     },
   });
 };
@@ -126,7 +126,7 @@ export const useBlockMark = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
-      message.success('Метка успешно заблокирована');
+      message.success('Марка успешно заблокирована');
     },
     onError: (error: Error, _, context) => {
       // Rollback on error
@@ -152,7 +152,7 @@ export const useUnblockMark = () => {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: markKeys.lists() });
-      message.success('Метка разблокирована');
+      message.success('Марка разблокирована');
     },
     onError: (error: Error) => {
       message.error(`Ошибка разблокировки: ${error.message}`);
@@ -211,9 +211,9 @@ export const useValidateMark = () => {
       apiClient.post<ValidateMarkResponse>(API_ENDPOINTS.MARKS.VALIDATE, data),
     onSuccess: (data) => {
       if (data.isValid) {
-        message.success('Метка валидна');
+        message.success('Марка валидна');
       } else {
-        message.warning(`Метка невалидна: ${data.reason}`);
+        message.warning(`Марка невалидна: ${data.reason}`);
       }
     },
     onError: (error: Error) => {

@@ -52,7 +52,7 @@ export const GenerateMarksModal = ({
 
   return (
     <Modal
-      title="Создать качественные метки"
+      title="Создать качественные марки"
       open={visible}
       onOk={handleSubmit}
       onCancel={handleCancel}
@@ -81,7 +81,7 @@ export const GenerateMarksModal = ({
 
         <Form.Item
           name="quantity"
-          label="Количество меток"
+          label="Количество марок"
           rules={[
             { required: true, message: 'Укажите количество' },
             { type: 'number', min: 1, max: 10000, message: 'От 1 до 10,000' },
