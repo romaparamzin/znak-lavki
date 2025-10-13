@@ -1,97 +1,326 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Text, Card, Button, Surface, Chip, FAB } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../App';
+import { useTranslation } from 'react-i18next';
+import { MainStackParamList } from '../navigation/types';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { useStats } from '../services/api/queries';
+import { syncService } from '../services/offline/syncService';
+import NetInfo from '@react-native-community/netinfo';
+import { setOnlineStatus } from '../store/slices/offlineSyncSlice';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+type NavigationProp = NativeStackNavigationProp<MainStackParamList, 'Home'>;
 
-interface Props {
-  navigation: HomeScreenNavigationProp;
-}
+const HomeScreen = () => {
+  const { t } = useTranslation();
+  const navigation = useNavigation<NavigationProp>();
+  const dispatch = useAppDispatch();
 
-export default function HomeScreen({ navigation }: Props) {
+  const user = useAppSelector((state) => state.auth.user);
+  const scanStats = useAppSelector((state) => ({
+    today: state.scanner.totalScansToday,
+    total: state.scanner.totalScans,
+  }));
+  const syncState = useAppSelector((state) => state.offlineSync);
+  const autoSyncEnabled = useAppSelector((state) => state.settings.autoSyncEnabled);
+
+  const { data: statsData, isLoading, refetch } = useStats();
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  useEffect(() => {
+    // Monitor network status
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      dispatch(setOnlineStatus(state.isConnected ?? false));
+    });
+
+    // Start auto sync if enabled
+    if (autoSyncEnabled) {
+      syncService.startAutoSync();
+    }
+
+    return () => {
+      unsubscribe();
+      syncService.stopAutoSync();
+    };
+  }, [autoSyncEnabled, dispatch]);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    if (syncState.isOnline) {
+      await syncService.forceSyncNow();
+    }
+    setRefreshing(false);
+  }, [refetch, syncState.isOnline]);
+
+  const handleScan = () => {
+    navigation.navigate('Scan');
+  };
+
+  const handleViewHistory = () => {
+    navigation.navigate('ScanHistory');
+  };
+
+  const handleSettings = () => {
+    navigation.navigate('Settings');
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Znak Lavki</Text>
-      <Text style={styles.subtitle}>Warehouse Quality Management</Text>
+      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        {/* Header */}
+        <Surface style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text variant="headlineMedium" style={styles.greeting}>
+                Welcome back,
+              </Text>
+              <Text variant="titleLarge" style={styles.userName}>
+                {user?.name || 'User'}
+              </Text>
+            </View>
+            <Button icon="cog" mode="outlined" onPress={handleSettings}>
+              {t('settings.title')}
+            </Button>
+          </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Scanner')}
-      >
-        <Text style={styles.buttonText}>Scan QR Code</Text>
-      </TouchableOpacity>
+          {/* Status Bar */}
+          <View style={styles.statusBar}>
+            <Chip
+              icon={syncState.isOnline ? 'wifi' : 'wifi-off'}
+              style={[
+                styles.statusChip,
+                { backgroundColor: syncState.isOnline ? '#DEF7EC' : '#FEE2E2' },
+              ]}
+              textStyle={{
+                color: syncState.isOnline ? '#03543F' : '#991B1B',
+              }}
+            >
+              {syncState.isOnline ? t('sync.online') : t('sync.offline')}
+            </Chip>
+            {syncState.queue.length > 0 && (
+              <Chip
+                icon="sync"
+                style={[styles.statusChip, { backgroundColor: '#FEF3C7' }]}
+                textStyle={{ color: '#92400E' }}
+              >
+                {syncState.queue.length} {t('sync.pendingSync')}
+              </Chip>
+            )}
+          </View>
+        </Surface>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}>Scanned Today</Text>
+        {/* Quick Action */}
+        <View style={styles.content}>
+          <Card style={styles.scanCard}>
+            <Card.Content style={styles.scanCardContent}>
+              <View>
+                <Text variant="headlineSmall" style={styles.scanTitle}>
+                  {t('scanner.scanBarcode')}
+                </Text>
+                <Text variant="bodyMedium" style={styles.scanSubtitle}>
+                  Scan products to validate quality
+                </Text>
+              </View>
+              <Button
+                mode="contained"
+                icon="barcode-scan"
+                onPress={handleScan}
+                style={styles.scanButton}
+              >
+                {t('scanner.title')}
+              </Button>
+            </Card.Content>
+          </Card>
+
+          {/* Statistics */}
+          <Text variant="titleLarge" style={styles.sectionTitle}>
+            {t('stats.today')}
+          </Text>
+
+          <View style={styles.statsGrid}>
+            <Card style={styles.statCard}>
+              <Card.Content>
+                <Text variant="displaySmall" style={styles.statNumber}>
+                  {scanStats.today}
+                </Text>
+                <Text variant="bodyMedium" style={styles.statLabel}>
+                  {t('stats.scannedToday')}
+                </Text>
+              </Card.Content>
+            </Card>
+
+            <Card style={styles.statCard}>
+              <Card.Content>
+                <Text variant="displaySmall" style={styles.statNumber}>
+                  {scanStats.total}
+                </Text>
+                <Text variant="bodyMedium" style={styles.statLabel}>
+                  {t('stats.totalScans')}
+                </Text>
+              </Card.Content>
+            </Card>
+          </View>
+
+          {statsData && (
+            <View style={styles.statsGrid}>
+              <Card style={[styles.statCard, styles.acceptedCard]}>
+                <Card.Content>
+                  <Text variant="headlineMedium" style={styles.acceptedNumber}>
+                    {statsData.accepted}
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statLabel}>
+                    {t('stats.accepted')}
+                  </Text>
+                </Card.Content>
+              </Card>
+
+              <Card style={[styles.statCard, styles.rejectedCard]}>
+                <Card.Content>
+                  <Text variant="headlineMedium" style={styles.rejectedNumber}>
+                    {statsData.rejected}
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statLabel}>
+                    {t('stats.rejected')}
+                  </Text>
+                </Card.Content>
+              </Card>
+
+              <Card style={[styles.statCard, styles.pendingCard]}>
+                <Card.Content>
+                  <Text variant="headlineMedium" style={styles.pendingNumber}>
+                    {statsData.pending}
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.statLabel}>
+                    {t('stats.pending')}
+                  </Text>
+                </Card.Content>
+              </Card>
+            </View>
+          )}
+
+          {/* Recent Activity */}
+          <View style={styles.recentSection}>
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Recent Activity
+            </Text>
+            <Button mode="outlined" onPress={handleViewHistory} icon="history">
+              {t('scanner.scanHistory')}
+            </Button>
+          </View>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>0</Text>
-          <Text style={styles.statLabel}>Total Scans</Text>
-        </View>
-      </View>
+      </ScrollView>
+
+      {/* Floating Action Button */}
+      <FAB icon="barcode-scan" style={styles.fab} onPress={handleScan} label="Scan" />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F3F4F6',
+  },
+  header: {
     padding: 20,
+    elevation: 2,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 16,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
+  greeting: {
     color: '#666',
-    marginBottom: 40,
   },
-  button: {
-    backgroundColor: '#4F46E5',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 8,
-    marginBottom: 40,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
+  userName: {
+    color: '#111',
     fontWeight: '600',
   },
-  statsContainer: {
+  statusBar: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 8,
+  },
+  statusChip: {
+    height: 28,
+  },
+  content: {
+    padding: 16,
+  },
+  scanCard: {
+    marginBottom: 24,
+    backgroundColor: '#4F46E5',
+  },
+  scanCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  scanTitle: {
+    color: 'white',
+    marginBottom: 4,
+  },
+  scanSubtitle: {
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  scanButton: {
+    backgroundColor: 'white',
+  },
+  sectionTitle: {
+    marginBottom: 12,
+    fontWeight: '600',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
   },
   statCard: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    minWidth: 140,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flex: 1,
   },
   statNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
     color: '#4F46E5',
+    fontWeight: 'bold',
   },
   statLabel: {
-    fontSize: 14,
     color: '#666',
     marginTop: 4,
   },
+  acceptedCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
+  },
+  acceptedNumber: {
+    color: '#10B981',
+  },
+  rejectedCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#EF4444',
+  },
+  rejectedNumber: {
+    color: '#EF4444',
+  },
+  pendingCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+  },
+  pendingNumber: {
+    color: '#F59E0B',
+  },
+  recentSection: {
+    marginTop: 8,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#4F46E5',
+  },
 });
 
-
+export default HomeScreen;

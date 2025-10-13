@@ -1,0 +1,105 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "error": "Error",
+    "success": "Success",
+    "loading": "Loading..."
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "biometricPrompt": "Authenticate to access the app",
+    "loginError": "Invalid email or password",
+    "loginSuccess": "Successfully logged in"
+  },
+  "scanner": {
+    "title": "Scan Product",
+    "scanBarcode": "Scan Barcode",
+    "manualEntry": "Enter Manually",
+    "enterCode": "Enter product code",
+    "toggleTorch": "Toggle Torch",
+    "scanHistory": "Scan History",
+    "scanning": "Scanning...",
+    "cameraPermissionDenied": "Camera permission denied",
+    "cameraPermissionMessage": "Please grant camera permission to scan products",
+    "invalidCode": "Invalid product code",
+    "scanSuccess": "Product scanned successfully"
+  },
+  "product": {
+    "name": "Product Name",
+    "sku": "SKU",
+    "expiryDate": "Expiry Date",
+    "manufacturer": "Manufacturer",
+    "category": "Category",
+    "status": "Status",
+    "valid": "Valid",
+    "expired": "Expired",
+    "blocked": "Blocked",
+    "unknown": "Unknown"
+  },
+  "validation": {
+    "title": "Product Validation",
+    "accept": "Accept",
+    "reject": "Reject",
+    "report": "Report Issue",
+    "notes": "Notes",
+    "reason": "Reason",
+    "acceptSuccess": "Product accepted",
+    "rejectSuccess": "Product rejected",
+    "reportSuccess": "Issue reported",
+    "expiryWarning": "Warning: Product expires soon",
+    "expiredError": "Error: Product has expired",
+    "blockedError": "Error: Product is blocked"
+  },
+  "errors": {
+    "networkError": "Network Error",
+    "networkErrorMessage": "Unable to connect to the server. Please check your internet connection.",
+    "retry": "Retry",
+    "expiredProduct": "Expired Product",
+    "expiredProductMessage": "This product has expired and cannot be accepted.",
+    "blockedProduct": "Blocked Product",
+    "blockedProductMessage": "This product has been blocked and cannot be processed.",
+    "cameraError": "Camera Error",
+    "cameraErrorMessage": "Unable to access camera. Please check permissions."
+  },
+  "stats": {
+    "today": "Today",
+    "total": "Total",
+    "scannedToday": "Scanned Today",
+    "totalScans": "Total Scans",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "pending": "Pending"
+  },
+  "sync": {
+    "syncing": "Syncing...",
+    "syncComplete": "Sync complete",
+    "syncFailed": "Sync failed",
+    "offline": "Offline",
+    "online": "Online",
+    "pendingSync": "items pending sync",
+    "lastSync": "Last sync"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "sound": "Sound",
+    "vibration": "Vibration",
+    "biometric": "Biometric Authentication",
+    "autoSync": "Auto Sync",
+    "theme": "Theme",
+    "analytics": "Analytics",
+    "about": "About",
+    "version": "Version"
+  }
+}

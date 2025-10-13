@@ -1,0 +1,105 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Изменить",
+    "back": "Назад",
+    "next": "Далее",
+    "done": "Готово",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "loading": "Загрузка..."
+  },
+  "auth": {
+    "login": "Войти",
+    "logout": "Выйти",
+    "email": "Email",
+    "password": "Пароль",
+    "forgotPassword": "Забыли пароль?",
+    "biometricPrompt": "Аутентификация для доступа к приложению",
+    "loginError": "Неверный email или пароль",
+    "loginSuccess": "Вход выполнен успешно"
+  },
+  "scanner": {
+    "title": "Сканировать товар",
+    "scanBarcode": "Сканировать штрихкод",
+    "manualEntry": "Ввести вручную",
+    "enterCode": "Введите код товара",
+    "toggleTorch": "Фонарик",
+    "scanHistory": "История сканирования",
+    "scanning": "Сканирование...",
+    "cameraPermissionDenied": "Доступ к камере запрещен",
+    "cameraPermissionMessage": "Предоставьте доступ к камере для сканирования товаров",
+    "invalidCode": "Неверный код товара",
+    "scanSuccess": "Товар успешно отсканирован"
+  },
+  "product": {
+    "name": "Название товара",
+    "sku": "Артикул",
+    "expiryDate": "Срок годности",
+    "manufacturer": "Производитель",
+    "category": "Категория",
+    "status": "Статус",
+    "valid": "Действителен",
+    "expired": "Просрочен",
+    "blocked": "Заблокирован",
+    "unknown": "Неизвестно"
+  },
+  "validation": {
+    "title": "Проверка товара",
+    "accept": "Принять",
+    "reject": "Отклонить",
+    "report": "Сообщить о проблеме",
+    "notes": "Заметки",
+    "reason": "Причина",
+    "acceptSuccess": "Товар принят",
+    "rejectSuccess": "Товар отклонен",
+    "reportSuccess": "Проблема зарегистрирована",
+    "expiryWarning": "Внимание: срок годности товара истекает",
+    "expiredError": "Ошибка: срок годности товара истек",
+    "blockedError": "Ошибка: товар заблокирован"
+  },
+  "errors": {
+    "networkError": "Ошибка сети",
+    "networkErrorMessage": "Не удается подключиться к серверу. Проверьте интернет-соединение.",
+    "retry": "Повторить",
+    "expiredProduct": "Просроченный товар",
+    "expiredProductMessage": "Срок годности этого товара истек и он не может быть принят.",
+    "blockedProduct": "Заблокированный товар",
+    "blockedProductMessage": "Этот товар заблокирован и не может быть обработан.",
+    "cameraError": "Ошибка камеры",
+    "cameraErrorMessage": "Не удается получить доступ к камере. Проверьте разрешения."
+  },
+  "stats": {
+    "today": "Сегодня",
+    "total": "Всего",
+    "scannedToday": "Отсканировано сегодня",
+    "totalScans": "Всего сканирований",
+    "accepted": "Принято",
+    "rejected": "Отклонено",
+    "pending": "Ожидает"
+  },
+  "sync": {
+    "syncing": "Синхронизация...",
+    "syncComplete": "Синхронизация завершена",
+    "syncFailed": "Синхронизация не удалась",
+    "offline": "Офлайн",
+    "online": "Онлайн",
+    "pendingSync": "элементов ожидают синхронизации",
+    "lastSync": "Последняя синхронизация"
+  },
+  "settings": {
+    "title": "Настройки",
+    "language": "Язык",
+    "sound": "Звук",
+    "vibration": "Вибрация",
+    "biometric": "Биометрическая аутентификация",
+    "autoSync": "Автосинхронизация",
+    "theme": "Тема",
+    "analytics": "Аналитика",
+    "about": "О приложении",
+    "version": "Версия"
+  }
+}

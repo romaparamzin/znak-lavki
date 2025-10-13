@@ -1,0 +1,105 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "done": "Hecho",
+    "error": "Error",
+    "success": "Éxito",
+    "loading": "Cargando..."
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "biometricPrompt": "Autenticarse para acceder a la aplicación",
+    "loginError": "Correo electrónico o contraseña no válidos",
+    "loginSuccess": "Inicio de sesión exitoso"
+  },
+  "scanner": {
+    "title": "Escanear producto",
+    "scanBarcode": "Escanear código de barras",
+    "manualEntry": "Ingresar manualmente",
+    "enterCode": "Ingrese el código del producto",
+    "toggleTorch": "Linterna",
+    "scanHistory": "Historial de escaneos",
+    "scanning": "Escaneando...",
+    "cameraPermissionDenied": "Permiso de cámara denegado",
+    "cameraPermissionMessage": "Conceda permiso de cámara para escanear productos",
+    "invalidCode": "Código de producto no válido",
+    "scanSuccess": "Producto escaneado exitosamente"
+  },
+  "product": {
+    "name": "Nombre del producto",
+    "sku": "SKU",
+    "expiryDate": "Fecha de caducidad",
+    "manufacturer": "Fabricante",
+    "category": "Categoría",
+    "status": "Estado",
+    "valid": "Válido",
+    "expired": "Caducado",
+    "blocked": "Bloqueado",
+    "unknown": "Desconocido"
+  },
+  "validation": {
+    "title": "Validación de producto",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "report": "Reportar problema",
+    "notes": "Notas",
+    "reason": "Razón",
+    "acceptSuccess": "Producto aceptado",
+    "rejectSuccess": "Producto rechazado",
+    "reportSuccess": "Problema reportado",
+    "expiryWarning": "Advertencia: El producto caduca pronto",
+    "expiredError": "Error: El producto ha caducado",
+    "blockedError": "Error: El producto está bloqueado"
+  },
+  "errors": {
+    "networkError": "Error de red",
+    "networkErrorMessage": "No se puede conectar al servidor. Verifique su conexión a Internet.",
+    "retry": "Reintentar",
+    "expiredProduct": "Producto caducado",
+    "expiredProductMessage": "Este producto ha caducado y no puede ser aceptado.",
+    "blockedProduct": "Producto bloqueado",
+    "blockedProductMessage": "Este producto ha sido bloqueado y no puede ser procesado.",
+    "cameraError": "Error de cámara",
+    "cameraErrorMessage": "No se puede acceder a la cámara. Verifique los permisos."
+  },
+  "stats": {
+    "today": "Hoy",
+    "total": "Total",
+    "scannedToday": "Escaneado hoy",
+    "totalScans": "Escaneos totales",
+    "accepted": "Aceptado",
+    "rejected": "Rechazado",
+    "pending": "Pendiente"
+  },
+  "sync": {
+    "syncing": "Sincronizando...",
+    "syncComplete": "Sincronización completa",
+    "syncFailed": "Sincronización fallida",
+    "offline": "Sin conexión",
+    "online": "En línea",
+    "pendingSync": "elementos pendientes de sincronización",
+    "lastSync": "Última sincronización"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "sound": "Sonido",
+    "vibration": "Vibración",
+    "biometric": "Autenticación biométrica",
+    "autoSync": "Sincronización automática",
+    "theme": "Tema",
+    "analytics": "Analítica",
+    "about": "Acerca de",
+    "version": "Versión"
+  }
+}
