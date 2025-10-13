@@ -1,0 +1,19 @@
+# Ignore everything except what we need
+**/*
+
+# Allow only source and config
+!src/
+!package.json
+!pnpm-lock.yaml
+!tsconfig.json
+!nest-cli.json
+
+# Don't allow tests
+src/**/*.test.ts
+src/**/*.spec.ts
+test/
+
+# Don't allow docs
+*.md
+docs/
+

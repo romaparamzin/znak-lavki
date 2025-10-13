@@ -1,0 +1,39 @@
+# Railway ignore file - что НЕ загружать в Railway
+
+# Documentation
+*.md
+docs/
+CONTRIBUTING.md
+LICENSE
+
+# Development
+.vscode/
+.idea/
+*.swp
+
+# Tests
+tests/
+test/
+coverage/
+*.test.ts
+*.spec.ts
+
+# Other services (deploy each separately)
+apps/mobile-app/
+
+# Deployment configs for other platforms
+k8s/
+terraform/
+.vercel/
+vercel.json
+
+# CI/CD
+.github/
+
+# Monitoring (deployed separately)
+monitoring/
+
+# Local files
+.env.local
+.env.development.local
+

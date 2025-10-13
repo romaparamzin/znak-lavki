@@ -1,0 +1,17 @@
+# Railway configuration для Mark Service
+# https://docs.railway.app/reference/config-as-code
+
+[build]
+  builder = "DOCKERFILE"
+  dockerfilePath = "services/mark-service/Dockerfile"
+
+[deploy]
+  restartPolicyType = "ON_FAILURE"
+  restartPolicyMaxRetries = 3
+  startCommand = "node services/mark-service/dist/main.js"
+
+[healthcheck]
+  path = "/health"
+  timeout = 30
+  interval = 60
+

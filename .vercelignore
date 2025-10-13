@@ -1,0 +1,35 @@
+# Vercel ignore file - что НЕ загружать в Vercel
+
+# Documentation
+*.md
+docs/
+
+# Development
+.vscode/
+.idea/
+
+# Tests
+tests/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Backend services (not needed for frontend)
+services/
+packages/shared/types/
+packages/shared/utils/
+
+# Deployment configs for other platforms
+k8s/
+terraform/
+docker/
+docker-compose*.yml
+Dockerfile
+
+# CI/CD
+.github/
+
+# Monitoring
+monitoring/
+
