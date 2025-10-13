@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Card, Row, Col, Typography, Spin, Alert, Select, Space } from 'antd';
+import { Card, Row, Col, Typography, Spin, Alert, Select } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import {
   LineChart,
@@ -166,13 +166,13 @@ const Analytics = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string, props: any) => [
+                    formatter={(value: number, _name: string, props: any) => [
                       `${value} марок (${props.payload.percentage}%)`,
                       STATUS_LABELS[props.payload.status] || props.payload.status,
                     ]}
                   />
                   <Legend
-                    formatter={(value, entry: any) => STATUS_LABELS[entry.payload.status] || entry.payload.status}
+                    formatter={(_value, entry: any) => STATUS_LABELS[entry.payload.status] || entry.payload.status}
                   />
                 </PieChart>
               </ResponsiveContainer>
