@@ -1,0 +1,311 @@
+# Horizontal Pod Autoscaler Configuration
+# Automatically scales pods based on CPU and memory metrics
+
+---
+# HPA for Mark Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mark-service-hpa
+  namespace: znak-lavki
+  labels:
+    app: mark-service
+    component: backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mark-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    # CPU-based scaling
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70  # Scale when CPU > 70%
+    
+    # Memory-based scaling
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80  # Scale when memory > 80%
+    
+    # Custom metric: requests per second
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"  # Scale when > 1000 RPS per pod
+  
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+        - type: Percent
+          value: 50  # Scale down max 50% of pods at once
+          periodSeconds: 60
+        - type: Pods
+          value: 2  # Or max 2 pods at once
+          periodSeconds: 60
+      selectPolicy: Min  # Use the most conservative policy
+    
+    scaleUp:
+      stabilizationWindowSeconds: 0  # Scale up immediately
+      policies:
+        - type: Percent
+          value: 100  # Can double pods count
+          periodSeconds: 30
+        - type: Pods
+          value: 4  # Or max 4 pods at once
+          periodSeconds: 30
+      selectPolicy: Max  # Use the most aggressive policy
+
+---
+# HPA for API Gateway
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: znak-lavki
+  labels:
+    app: api-gateway
+    component: backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+  minReplicas: 2
+  maxReplicas: 15
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 5
+          periodSeconds: 30
+
+---
+# HPA for Integration Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: integration-service-hpa
+  namespace: znak-lavki
+  labels:
+    app: integration-service
+    component: backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: integration-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+
+---
+# HPA for Notification Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: notification-service-hpa
+  namespace: znak-lavki
+  labels:
+    app: notification-service
+    component: backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: notification-service
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+# Vertical Pod Autoscaler (VPA) for Database
+# Recommends resource limits based on usage
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: postgres-vpa
+  namespace: znak-lavki
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: postgres
+  updatePolicy:
+    updateMode: "Auto"  # or "Recommend" for manual review
+  resourcePolicy:
+    containerPolicies:
+      - containerName: postgres
+        minAllowed:
+          cpu: 500m
+          memory: 512Mi
+        maxAllowed:
+          cpu: 4000m
+          memory: 8Gi
+        controlledResources:
+          - cpu
+          - memory
+
+---
+# Pod Disruption Budget for High Availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: mark-service-pdb
+  namespace: znak-lavki
+spec:
+  minAvailable: 1  # Always keep at least 1 pod running
+  selector:
+    matchLabels:
+      app: mark-service
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-gateway-pdb
+  namespace: znak-lavki
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+
+---
+# Resource Quotas for Namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: znak-lavki-quota
+  namespace: znak-lavki
+spec:
+  hard:
+    requests.cpu: "20"      # Total CPU requests
+    requests.memory: 32Gi   # Total memory requests
+    limits.cpu: "40"        # Total CPU limits
+    limits.memory: 64Gi     # Total memory limits
+    persistentvolumeclaims: "10"
+    services.loadbalancers: "2"
+
+---
+# Limit Range for Pods
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: znak-lavki-limits
+  namespace: znak-lavki
+spec:
+  limits:
+    # Default limits for pods without resource specs
+    - max:
+        cpu: "2"
+        memory: 4Gi
+      min:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 250m
+        memory: 256Mi
+      type: Container
+
+---
+# Custom Metrics for HPA (requires Prometheus Adapter)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-adapter-config
+  namespace: monitoring
+data:
+  config.yaml: |
+    rules:
+      # HTTP requests per second metric
+      - seriesQuery: 'http_requests_total{namespace="znak-lavki"}'
+        resources:
+          overrides:
+            namespace: {resource: "namespace"}
+            pod: {resource: "pod"}
+        name:
+          matches: "^(.*)_total$"
+          as: "${1}_per_second"
+        metricsQuery: 'rate(<<.Series>>{<<.LabelMatchers>>}[1m])'
+      
+      # Database connection pool usage
+      - seriesQuery: 'pg_stat_database_numbackends{namespace="znak-lavki"}'
+        resources:
+          overrides:
+            namespace: {resource: "namespace"}
+            pod: {resource: "pod"}
+        name:
+          as: "postgresql_connections"
+        metricsQuery: '<<.Series>>{<<.LabelMatchers>>}'
+
+---
+# Cluster Autoscaler Configuration (Node-level)
+# This runs at the cluster level, not in a namespace
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-autoscaler-config
+  namespace: kube-system
+data:
+  config.yaml: |
+    scaleDownEnabled: true
+    scaleDownDelayAfterAdd: 10m
+    scaleDownUnneededTime: 10m
+    scaleDownUtilizationThreshold: 0.5
+    skipNodesWithLocalStorage: false
+    skipNodesWithSystemPods: true
+    maxNodeProvisionTime: 15m
+

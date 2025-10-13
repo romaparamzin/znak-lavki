@@ -1,221 +1,333 @@
+/**
+ * Redis Cache Service
+ * Implements caching strategy for hot marks and frequently accessed data
+ */
+
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { QualityMark } from '../entities/quality-mark.entity';
 
-/**
- * Cache Service
- * Handles Redis caching for hot data with configurable TTL
- */
 @Injectable()
 export class CacheService {
   private readonly logger = new Logger(CacheService.name);
 
-  // Cache key prefixes
-  private readonly MARK_PREFIX = 'mark:';
-  private readonly VALIDATION_PREFIX = 'validation:';
-  private readonly STATS_PREFIX = 'stats:';
-
-  // Default TTL values (in seconds)
-  private readonly DEFAULT_TTL = 3600; // 1 hour
-  private readonly VALIDATION_TTL = 300; // 5 minutes
-  private readonly STATS_TTL = 60; // 1 minute
-
   constructor(
     @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
+    private cacheManager: Cache,
   ) {}
 
+  // ============================================
+  // CACHE KEY PATTERNS
+  // ============================================
+  private readonly KEYS = {
+    MARK: (markCode: string) => `mark:${markCode}`,
+    MARK_LIST: (filters: string) => `marks:list:${filters}`,
+    DASHBOARD_METRICS: 'dashboard:metrics',
+    ANALYTICS_TRENDS: (days: number) => `analytics:trends:${days}`,
+    STATUS_DISTRIBUTION: 'analytics:status-distribution',
+    HOT_MARKS: 'hot:marks', // Sorted set of frequently accessed marks
+    MARK_VALIDATION_COUNT: (markCode: string) => `mark:validation:${markCode}`,
+  };
+
+  // ============================================
+  // CACHE TTL (Time To Live)
+  // ============================================
+  private readonly TTL = {
+    MARK: 3600, // 1 hour (hot marks)
+    MARK_LIST: 300, // 5 minutes
+    DASHBOARD: 60, // 1 minute
+    ANALYTICS: 1800, // 30 minutes
+    HOT_MARKS: 86400, // 24 hours
+  };
+
+  // ============================================
+  // MARK CACHING
+  // ============================================
+
   /**
-   * Get cached mark by mark code
-   * @param markCode - Mark code
-   * @returns Promise<any | null> - Cached mark or null
+   * Get mark from cache
    */
-  async getMark(markCode: string): Promise<any | null> {
+  async getMark(markCode: string): Promise<QualityMark | null> {
     try {
-      const key = `${this.MARK_PREFIX}${markCode}`;
-      const cached = await this.cacheManager.get(key);
+      const cached = await this.cacheManager.get<QualityMark>(
+        this.KEYS.MARK(markCode),
+      );
       
       if (cached) {
-        this.logger.debug(`Cache HIT for mark: ${markCode}`);
+        this.logger.debug(`Cache HIT: mark ${markCode}`);
+        // Track as hot mark
+        await this.incrementHotMark(markCode);
       } else {
-        this.logger.debug(`Cache MISS for mark: ${markCode}`);
+        this.logger.debug(`Cache MISS: mark ${markCode}`);
       }
       
       return cached || null;
     } catch (error) {
-      this.logger.error(
-        `Failed to get mark from cache: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Cache get error for mark ${markCode}:`, error);
       return null;
     }
   }
 
   /**
    * Set mark in cache
-   * @param markCode - Mark code
-   * @param mark - Mark data
-   * @param ttl - Time to live in seconds (optional)
    */
-  async setMark(markCode: string, mark: any, ttl?: number): Promise<void> {
+  async setMark(mark: QualityMark): Promise<void> {
     try {
-      const key = `${this.MARK_PREFIX}${markCode}`;
-      await this.cacheManager.set(key, mark, ttl || this.DEFAULT_TTL);
-      this.logger.debug(`Cached mark: ${markCode}`);
-    } catch (error) {
-      this.logger.error(
-        `Failed to set mark in cache: ${error.message}`,
-        error.stack,
+      await this.cacheManager.set(
+        this.KEYS.MARK(mark.markCode),
+        mark,
+        this.TTL.MARK,
       );
+      this.logger.debug(`Cached mark: ${mark.markCode}`);
+    } catch (error) {
+      this.logger.error(`Cache set error for mark ${mark.markCode}:`, error);
     }
   }
 
   /**
-   * Delete mark from cache
-   * @param markCode - Mark code
+   * Invalidate mark cache
    */
-  async deleteMark(markCode: string): Promise<void> {
+  async invalidateMark(markCode: string): Promise<void> {
     try {
-      const key = `${this.MARK_PREFIX}${markCode}`;
-      await this.cacheManager.del(key);
-      this.logger.debug(`Deleted mark from cache: ${markCode}`);
+      await this.cacheManager.del(this.KEYS.MARK(markCode));
+      this.logger.debug(`Invalidated cache for mark: ${markCode}`);
     } catch (error) {
-      this.logger.error(
-        `Failed to delete mark from cache: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Cache delete error for mark ${markCode}:`, error);
     }
   }
 
   /**
-   * Get cached validation result
-   * @param markCode - Mark code
-   * @returns Promise<any | null> - Cached validation result or null
+   * Batch invalidate marks
    */
-  async getValidation(markCode: string): Promise<any | null> {
+  async invalidateMarks(markCodes: string[]): Promise<void> {
     try {
-      const key = `${this.VALIDATION_PREFIX}${markCode}`;
-      const cached = await this.cacheManager.get(key);
+      const keys = markCodes.map(code => this.KEYS.MARK(code));
+      await Promise.all(keys.map(key => this.cacheManager.del(key)));
+      this.logger.debug(`Invalidated cache for ${markCodes.length} marks`);
+    } catch (error) {
+      this.logger.error('Batch cache delete error:', error);
+    }
+  }
+
+  // ============================================
+  // HOT MARKS TRACKING
+  // ============================================
+
+  /**
+   * Increment hot mark counter
+   */
+  async incrementHotMark(markCode: string): Promise<void> {
+    try {
+      const key = this.KEYS.MARK_VALIDATION_COUNT(markCode);
+      const count = await this.cacheManager.get<number>(key) || 0;
+      await this.cacheManager.set(key, count + 1, this.TTL.HOT_MARKS);
       
-      if (cached) {
-        this.logger.debug(`Cache HIT for validation: ${markCode}`);
+      // If mark is accessed frequently, keep it in cache longer
+      if (count > 10) {
+        const mark = await this.getMark(markCode);
+        if (mark) {
+          await this.setMark(mark); // Refresh TTL
+        }
       }
-      
-      return cached || null;
     } catch (error) {
-      this.logger.error(
-        `Failed to get validation from cache: ${error.message}`,
-        error.stack,
+      this.logger.error(`Error tracking hot mark ${markCode}:`, error);
+    }
+  }
+
+  /**
+   * Get hot marks list
+   */
+  async getHotMarks(limit: number = 100): Promise<string[]> {
+    try {
+      // This would require Redis sorted sets
+      // For now, return empty array
+      return [];
+    } catch (error) {
+      this.logger.error('Error getting hot marks:', error);
+      return [];
+    }
+  }
+
+  // ============================================
+  // DASHBOARD CACHING
+  // ============================================
+
+  /**
+   * Cache dashboard metrics
+   */
+  async setDashboardMetrics(metrics: any): Promise<void> {
+    try {
+      await this.cacheManager.set(
+        this.KEYS.DASHBOARD_METRICS,
+        metrics,
+        this.TTL.DASHBOARD,
       );
+      this.logger.debug('Cached dashboard metrics');
+    } catch (error) {
+      this.logger.error('Error caching dashboard metrics:', error);
+    }
+  }
+
+  /**
+   * Get cached dashboard metrics
+   */
+  async getDashboardMetrics(): Promise<any | null> {
+    try {
+      return await this.cacheManager.get(this.KEYS.DASHBOARD_METRICS);
+    } catch (error) {
+      this.logger.error('Error getting cached dashboard metrics:', error);
+      return null;
+    }
+  }
+
+  // ============================================
+  // ANALYTICS CACHING
+  // ============================================
+
+  /**
+   * Cache analytics trends
+   */
+  async setAnalyticsTrends(days: number, trends: any): Promise<void> {
+    try {
+      await this.cacheManager.set(
+        this.KEYS.ANALYTICS_TRENDS(days),
+        trends,
+        this.TTL.ANALYTICS,
+      );
+      this.logger.debug(`Cached analytics trends for ${days} days`);
+    } catch (error) {
+      this.logger.error('Error caching analytics trends:', error);
+    }
+  }
+
+  /**
+   * Get cached analytics trends
+   */
+  async getAnalyticsTrends(days: number): Promise<any | null> {
+    try {
+      return await this.cacheManager.get(this.KEYS.ANALYTICS_TRENDS(days));
+    } catch (error) {
+      this.logger.error('Error getting cached analytics trends:', error);
       return null;
     }
   }
 
   /**
-   * Set validation result in cache
-   * @param markCode - Mark code
-   * @param validationResult - Validation result
+   * Cache status distribution
    */
-  async setValidation(markCode: string, validationResult: any): Promise<void> {
+  async setStatusDistribution(distribution: any): Promise<void> {
     try {
-      const key = `${this.VALIDATION_PREFIX}${markCode}`;
-      await this.cacheManager.set(key, validationResult, this.VALIDATION_TTL);
-      this.logger.debug(`Cached validation result: ${markCode}`);
-    } catch (error) {
-      this.logger.error(
-        `Failed to set validation in cache: ${error.message}`,
-        error.stack,
+      await this.cacheManager.set(
+        this.KEYS.STATUS_DISTRIBUTION,
+        distribution,
+        this.TTL.ANALYTICS,
       );
+      this.logger.debug('Cached status distribution');
+    } catch (error) {
+      this.logger.error('Error caching status distribution:', error);
     }
   }
 
   /**
-   * Get statistics from cache
-   * @param key - Stats key
-   * @returns Promise<any | null> - Cached stats or null
+   * Get cached status distribution
    */
-  async getStats(key: string): Promise<any | null> {
+  async getStatusDistribution(): Promise<any | null> {
     try {
-      const cacheKey = `${this.STATS_PREFIX}${key}`;
-      return await this.cacheManager.get(cacheKey) || null;
+      return await this.cacheManager.get(this.KEYS.STATUS_DISTRIBUTION);
     } catch (error) {
-      this.logger.error(
-        `Failed to get stats from cache: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error('Error getting cached status distribution:', error);
       return null;
     }
   }
 
+  // ============================================
+  // CACHE INVALIDATION
+  // ============================================
+
   /**
-   * Set statistics in cache
-   * @param key - Stats key
-   * @param stats - Stats data
+   * Invalidate all dashboard caches
    */
-  async setStats(key: string, stats: any): Promise<void> {
+  async invalidateDashboard(): Promise<void> {
     try {
-      const cacheKey = `${this.STATS_PREFIX}${key}`;
-      await this.cacheManager.set(cacheKey, stats, this.STATS_TTL);
+      await Promise.all([
+        this.cacheManager.del(this.KEYS.DASHBOARD_METRICS),
+        this.cacheManager.del(this.KEYS.STATUS_DISTRIBUTION),
+      ]);
+      this.logger.debug('Invalidated dashboard caches');
     } catch (error) {
-      this.logger.error(
-        `Failed to set stats in cache: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error('Error invalidating dashboard caches:', error);
     }
   }
 
   /**
-   * Invalidate multiple marks by pattern
-   * @param pattern - Pattern to match (e.g., 'mark:*')
+   * Invalidate all analytics caches
    */
-  async invalidatePattern(pattern: string): Promise<void> {
+  async invalidateAnalytics(): Promise<void> {
     try {
-      // Note: This is a simplified implementation
-      // In production, you might need to use Redis SCAN command
-      this.logger.debug(`Invalidating cache pattern: ${pattern}`);
-      // Implementation depends on cache-manager store (Redis)
+      const days = [7, 14, 30, 90];
+      await Promise.all([
+        ...days.map(d => this.cacheManager.del(this.KEYS.ANALYTICS_TRENDS(d))),
+        this.cacheManager.del(this.KEYS.STATUS_DISTRIBUTION),
+      ]);
+      this.logger.debug('Invalidated analytics caches');
     } catch (error) {
-      this.logger.error(
-        `Failed to invalidate cache pattern: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error('Error invalidating analytics caches:', error);
     }
   }
 
   /**
-   * Clear all cache
+   * Clear all caches
    */
   async clearAll(): Promise<void> {
     try {
       await this.cacheManager.reset();
-      this.logger.log('Cache cleared');
+      this.logger.warn('Cleared all caches');
     } catch (error) {
-      this.logger.error(
-        `Failed to clear cache: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error('Error clearing all caches:', error);
     }
   }
+
+  // ============================================
+  // CACHE WARMING
+  // ============================================
+
+  /**
+   * Warm up cache with hot marks
+   * Call this on application startup or periodically
+   */
+  async warmUpCache(marks: QualityMark[]): Promise<void> {
+    try {
+      this.logger.log(`Warming up cache with ${marks.length} marks...`);
+      
+      await Promise.all(
+        marks.map(mark => this.setMark(mark)),
+      );
+      
+      this.logger.log('Cache warm-up completed');
+    } catch (error) {
+      this.logger.error('Error warming up cache:', error);
+    }
+  }
+
+  // ============================================
+  // CACHE STATISTICS
+  // ============================================
 
   /**
    * Get cache statistics
-   * @returns Promise<any> - Cache statistics
    */
-  async getCacheStats(): Promise<any> {
+  async getStats(): Promise<any> {
     try {
-      // Implementation depends on cache-manager store
-      // This is a placeholder that would be implemented based on Redis
+      // This would require Redis INFO command
+      // For now, return basic info
       return {
-        provider: 'redis',
         status: 'operational',
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to get cache stats: ${error.message}`,
-        error.stack,
-      );
-      return { status: 'error' };
+      this.logger.error('Error getting cache stats:', error);
+      return { status: 'error', error: error.message };
     }
   }
 }
-
