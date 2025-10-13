@@ -10,6 +10,7 @@ import { QrModule } from './qr/qr.module';
 import { MarkModule } from './modules/mark.module';
 import { DashboardModule } from './modules/dashboard.module';
 import { AuditModule } from './modules/audit.module';
+import { AnalyticsModule } from './modules/analytics.module';
 import { QualityMark } from './entities/quality-mark.entity';
 import { AuditLog } from './entities/audit-log.entity';
 
@@ -94,6 +95,7 @@ import { AuditLog } from './entities/audit-log.entity';
     MarkModule,
     DashboardModule,
     AuditModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
