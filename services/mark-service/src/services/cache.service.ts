@@ -50,10 +50,8 @@ export class CacheService {
    */
   async getMark(markCode: string): Promise<QualityMark | null> {
     try {
-      const cached = await this.cacheManager.get<QualityMark>(
-        this.KEYS.MARK(markCode),
-      );
-      
+      const cached = await this.cacheManager.get<QualityMark>(this.KEYS.MARK(markCode));
+
       if (cached) {
         this.logger.debug(`Cache HIT: mark ${markCode}`);
         // Track as hot mark
@@ -61,7 +59,7 @@ export class CacheService {
       } else {
         this.logger.debug(`Cache MISS: mark ${markCode}`);
       }
-      
+
       return cached || null;
     } catch (error) {
       this.logger.error(`Cache get error for mark ${markCode}:`, error);
@@ -74,11 +72,7 @@ export class CacheService {
    */
   async setMark(mark: QualityMark): Promise<void> {
     try {
-      await this.cacheManager.set(
-        this.KEYS.MARK(mark.markCode),
-        mark,
-        this.TTL.MARK,
-      );
+      await this.cacheManager.set(this.KEYS.MARK(mark.markCode), mark, this.TTL.MARK);
       this.logger.debug(`Cached mark: ${mark.markCode}`);
     } catch (error) {
       this.logger.error(`Cache set error for mark ${mark.markCode}:`, error);
@@ -98,12 +92,49 @@ export class CacheService {
   }
 
   /**
+   * Delete mark from cache (alias for invalidateMark)
+   */
+  async deleteMark(markCode: string): Promise<void> {
+    return this.invalidateMark(markCode);
+  }
+
+  /**
+   * Get validation result from cache
+   */
+  async getValidation(markCode: string): Promise<any | null> {
+    try {
+      const key = `validation:${markCode}`;
+      const cached = await this.cacheManager.get(key);
+      if (cached) {
+        this.logger.debug(`Cache HIT: validation ${markCode}`);
+      }
+      return cached || null;
+    } catch (error) {
+      this.logger.error(`Cache get validation error for mark ${markCode}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Set validation result in cache
+   */
+  async setValidation(markCode: string, data: any): Promise<void> {
+    try {
+      const key = `validation:${markCode}`;
+      await this.cacheManager.set(key, data, 3600); // 1 hour TTL
+      this.logger.debug(`Cached validation: ${markCode}`);
+    } catch (error) {
+      this.logger.error(`Cache set validation error for mark ${markCode}:`, error);
+    }
+  }
+
+  /**
    * Batch invalidate marks
    */
   async invalidateMarks(markCodes: string[]): Promise<void> {
     try {
-      const keys = markCodes.map(code => this.KEYS.MARK(code));
-      await Promise.all(keys.map(key => this.cacheManager.del(key)));
+      const keys = markCodes.map((code) => this.KEYS.MARK(code));
+      await Promise.all(keys.map((key) => this.cacheManager.del(key)));
       this.logger.debug(`Invalidated cache for ${markCodes.length} marks`);
     } catch (error) {
       this.logger.error('Batch cache delete error:', error);
@@ -120,9 +151,9 @@ export class CacheService {
   async incrementHotMark(markCode: string): Promise<void> {
     try {
       const key = this.KEYS.MARK_VALIDATION_COUNT(markCode);
-      const count = await this.cacheManager.get<number>(key) || 0;
+      const count = (await this.cacheManager.get<number>(key)) || 0;
       await this.cacheManager.set(key, count + 1, this.TTL.HOT_MARKS);
-      
+
       // If mark is accessed frequently, keep it in cache longer
       if (count > 10) {
         const mark = await this.getMark(markCode);
@@ -158,11 +189,7 @@ export class CacheService {
    */
   async setDashboardMetrics(metrics: any): Promise<void> {
     try {
-      await this.cacheManager.set(
-        this.KEYS.DASHBOARD_METRICS,
-        metrics,
-        this.TTL.DASHBOARD,
-      );
+      await this.cacheManager.set(this.KEYS.DASHBOARD_METRICS, metrics, this.TTL.DASHBOARD);
       this.logger.debug('Cached dashboard metrics');
     } catch (error) {
       this.logger.error('Error caching dashboard metrics:', error);
@@ -190,11 +217,7 @@ export class CacheService {
    */
   async setAnalyticsTrends(days: number, trends: any): Promise<void> {
     try {
-      await this.cacheManager.set(
-        this.KEYS.ANALYTICS_TRENDS(days),
-        trends,
-        this.TTL.ANALYTICS,
-      );
+      await this.cacheManager.set(this.KEYS.ANALYTICS_TRENDS(days), trends, this.TTL.ANALYTICS);
       this.logger.debug(`Cached analytics trends for ${days} days`);
     } catch (error) {
       this.logger.error('Error caching analytics trends:', error);
@@ -218,11 +241,7 @@ export class CacheService {
    */
   async setStatusDistribution(distribution: any): Promise<void> {
     try {
-      await this.cacheManager.set(
-        this.KEYS.STATUS_DISTRIBUTION,
-        distribution,
-        this.TTL.ANALYTICS,
-      );
+      await this.cacheManager.set(this.KEYS.STATUS_DISTRIBUTION, distribution, this.TTL.ANALYTICS);
       this.logger.debug('Cached status distribution');
     } catch (error) {
       this.logger.error('Error caching status distribution:', error);
@@ -267,7 +286,7 @@ export class CacheService {
     try {
       const days = [7, 14, 30, 90];
       await Promise.all([
-        ...days.map(d => this.cacheManager.del(this.KEYS.ANALYTICS_TRENDS(d))),
+        ...days.map((d) => this.cacheManager.del(this.KEYS.ANALYTICS_TRENDS(d))),
         this.cacheManager.del(this.KEYS.STATUS_DISTRIBUTION),
       ]);
       this.logger.debug('Invalidated analytics caches');
@@ -299,11 +318,9 @@ export class CacheService {
   async warmUpCache(marks: QualityMark[]): Promise<void> {
     try {
       this.logger.log(`Warming up cache with ${marks.length} marks...`);
-      
-      await Promise.all(
-        marks.map(mark => this.setMark(mark)),
-      );
-      
+
+      await Promise.all(marks.map((mark) => this.setMark(mark)));
+
       this.logger.log('Cache warm-up completed');
     } catch (error) {
       this.logger.error('Error warming up cache:', error);

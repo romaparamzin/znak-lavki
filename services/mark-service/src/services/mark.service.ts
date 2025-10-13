@@ -50,10 +50,7 @@ export class MarkService {
    * @param userId - User performing the operation
    * @returns Promise<GenerateMarkResponseDto>
    */
-  async generateMarks(
-    dto: GenerateMarkDto,
-    userId?: string,
-  ): Promise<GenerateMarkResponseDto> {
+  async generateMarks(dto: GenerateMarkDto, userId?: string): Promise<GenerateMarkResponseDto> {
     const startTime = Date.now();
     this.logger.log(`Generating ${dto.quantity} marks for GTIN: ${dto.gtin}`);
 
@@ -100,22 +97,16 @@ export class MarkService {
       }
 
       // Audit logging (batch)
-      await this.auditService.logMarkGenerated(
-        markCodes,
-        userId,
-        {
-          gtin: dto.gtin,
-          quantity: dto.quantity,
-          supplierId: dto.supplierId,
-          manufacturerId: dto.manufacturerId,
-          orderId: dto.orderId,
-        },
-      );
+      await this.auditService.logMarkGenerated(markCodes, userId, {
+        gtin: dto.gtin,
+        quantity: dto.quantity,
+        supplierId: dto.supplierId,
+        manufacturerId: dto.manufacturerId,
+        orderId: dto.orderId,
+      });
 
       const processingTime = Date.now() - startTime;
-      this.logger.log(
-        `Successfully generated ${savedMarks.length} marks in ${processingTime}ms`,
-      );
+      this.logger.log(`Successfully generated ${savedMarks.length} marks in ${processingTime}ms`);
 
       return {
         marks: savedMarks.map((mark) => this.toResponseDto(mark)),
@@ -124,10 +115,7 @@ export class MarkService {
         processingTimeMs: processingTime,
       };
     } catch (error: any) {
-      this.logger.error(
-        `Failed to generate marks: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Failed to generate marks: ${error.message}`, error.stack);
       throw error;
     }
   }
@@ -153,10 +141,7 @@ export class MarkService {
    * @param useCache - Whether to use cache
    * @returns Promise<MarkResponseDto>
    */
-  async getMarkByCode(
-    markCode: string,
-    useCache: boolean = true,
-  ): Promise<MarkResponseDto> {
+  async getMarkByCode(markCode: string, useCache: boolean = true): Promise<MarkResponseDto> {
     // Try cache first
     if (useCache) {
       const cached = await this.cacheService.getMark(markCode);
@@ -175,7 +160,7 @@ export class MarkService {
 
     // Cache the result
     if (useCache) {
-      await this.cacheService.setMark(markCode, response);
+      await this.cacheService.setMark(mark);
     }
 
     return response;
@@ -448,12 +433,7 @@ export class MarkService {
     }
 
     // Audit log
-    await this.auditService.logBulkBlock(
-      successfulMarkCodes,
-      dto.reason,
-      userId,
-      ipAddress,
-    );
+    await this.auditService.logBulkBlock(successfulMarkCodes, dto.reason, userId, ipAddress);
 
     const processingTime = Date.now() - startTime;
 
@@ -561,9 +541,7 @@ export class MarkService {
    * @param dto - Expiring marks parameters
    * @returns Promise<PaginatedMarkResponseDto>
    */
-  async getExpiringMarks(
-    dto: ExpiringMarksDto,
-  ): Promise<PaginatedMarkResponseDto> {
+  async getExpiringMarks(dto: ExpiringMarksDto): Promise<PaginatedMarkResponseDto> {
     const { daysBeforeExpiry = 30, page = 1, limit = 20 } = dto;
 
     const now = new Date();
@@ -654,12 +632,11 @@ export class MarkService {
     await this.markRepository.save(mark);
 
     // Audit log
-    await this.auditService.logMarkValidated(
-      markCode,
-      userId || dto.userId,
-      ipAddress,
-      { location, isValid, reason },
-    );
+    await this.auditService.logMarkValidated(markCode, userId || dto.userId, ipAddress, {
+      location,
+      isValid,
+      reason,
+    });
 
     const response: ValidateMarkResponseDto = {
       isValid,
@@ -710,14 +687,9 @@ export class MarkService {
         await this.cacheService.deleteMark(mark.markCode);
       }
 
-      this.logger.log(
-        `Auto-expiry job completed: ${expiredMarks.length} marks marked as expired`,
-      );
+      this.logger.log(`Auto-expiry job completed: ${expiredMarks.length} marks marked as expired`);
     } catch (error: any) {
-      this.logger.error(
-        `Auto-expiry job failed: ${error.message}`,
-        error.stack,
-      );
+      this.logger.error(`Auto-expiry job failed: ${error.message}`, error.stack);
     }
   }
 
@@ -748,4 +720,3 @@ export class MarkService {
     };
   }
 }
-

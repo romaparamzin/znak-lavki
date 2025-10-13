@@ -1,4 +1,4 @@
-version: '3.8'
+name: znak-lavki
 
 services:
   # PostgreSQL Database
@@ -113,5 +113,3 @@ volumes:
 networks:
   znak-lavki-network:
     driver: bridge
-
-
