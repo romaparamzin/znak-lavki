@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { QrModule } from './qr/qr.module';
 import { MarkModule } from './modules/mark.module';
 import { DashboardModule } from './modules/dashboard.module';
+import { AuditModule } from './modules/audit.module';
 import { QualityMark } from './entities/quality-mark.entity';
 import { AuditLog } from './entities/audit-log.entity';
 
@@ -92,6 +93,7 @@ import { AuditLog } from './entities/audit-log.entity';
     QrModule,
     MarkModule,
     DashboardModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [AppService],

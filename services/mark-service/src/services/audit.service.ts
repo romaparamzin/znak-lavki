@@ -242,5 +242,65 @@ export class AuditService {
       take: limit,
     });
   }
+
+  /**
+   * Get audit logs with pagination and filters
+   */
+  async getAuditLogs(filters: {
+    page?: number;
+    limit?: number;
+    markCode?: string;
+    action?: AuditAction;
+    userId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.auditRepository
+      .createQueryBuilder('audit')
+      .orderBy('audit.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    // Apply filters
+    if (filters.markCode) {
+      queryBuilder.andWhere('audit.markCode = :markCode', { markCode: filters.markCode });
+    }
+
+    if (filters.action) {
+      queryBuilder.andWhere('audit.action = :action', { action: filters.action });
+    }
+
+    if (filters.userId) {
+      queryBuilder.andWhere('audit.userId = :userId', { userId: filters.userId });
+    }
+
+    if (filters.startDate) {
+      queryBuilder.andWhere('audit.createdAt >= :startDate', {
+        startDate: new Date(filters.startDate),
+      });
+    }
+
+    if (filters.endDate) {
+      queryBuilder.andWhere('audit.createdAt <= :endDate', {
+        endDate: new Date(filters.endDate),
+      });
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPreviousPage: page > 1,
+    };
+  }
 }
 
