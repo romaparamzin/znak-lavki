@@ -13,13 +13,45 @@ import {
   ArrowDownOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { useDashboardMetrics } from '../../hooks/useDashboard';
+import { useTrends, useStatusDistribution } from '../../hooks/useAnalytics';
 
 const { Title } = Typography;
+
+// Цвета для статусов
+const STATUS_COLORS: Record<string, string> = {
+  active: '#52c41a',
+  blocked: '#faad14',
+  expired: '#ff4d4f',
+  used: '#1890ff',
+};
+
+// Русские названия статусов
+const STATUS_LABELS: Record<string, string> = {
+  active: 'Активные',
+  blocked: 'Заблокированные',
+  expired: 'Истекшие',
+  used: 'Использованные',
+};
 
 const Dashboard = () => {
   // Fetch real data from API
   const { data: metrics, isLoading, error } = useDashboardMetrics();
+  const { data: trendsData, isLoading: trendsLoading } = useTrends(7);
+  const { data: statusData, isLoading: statusLoading } = useStatusDistribution();
 
   const MetricCard = ({
     title,
@@ -143,36 +175,103 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Charts Placeholders */}
+      {/* Charts */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="Тренды генерации" bordered={false}>
-            <div
-              style={{
-                height: 300,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {/* Add Recharts LineChart here */}
-              <Typography.Text type="secondary">График трендов (добавить Recharts)</Typography.Text>
-            </div>
+          <Card title="Тренды генерации (7 дней)" bordered={false}>
+            {trendsLoading ? (
+              <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                <Spin indicator={<LoadingOutlined style={{ fontSize: 36 }} spin />} />
+              </div>
+            ) : trendsData && trendsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={trendsData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return `${date.getDate()}/${date.getMonth() + 1}`;
+                    }}
+                  />
+                  <YAxis />
+                  <Tooltip
+                    labelFormatter={(value) => {
+                      const date = new Date(value);
+                      return date.toLocaleDateString('ru-RU');
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="generated"
+                    stroke="#1890ff"
+                    name="Сгенерировано"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="validated"
+                    stroke="#52c41a"
+                    name="Валидировано"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                <Typography.Text type="secondary">Нет данных за последние 7 дней</Typography.Text>
+              </div>
+            )}
           </Card>
         </Col>
         <Col xs={24} lg={12}>
           <Card title="Распределение по статусам" bordered={false}>
-            <div
-              style={{
-                height: 300,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {/* Add Recharts PieChart here */}
-              <Typography.Text type="secondary">Pie chart (добавить Recharts)</Typography.Text>
-            </div>
+            {statusLoading ? (
+              <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                <Spin indicator={<LoadingOutlined style={{ fontSize: 36 }} spin />} />
+              </div>
+            ) : statusData && statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ status, percentage }) =>
+                      percentage > 0 ? `${STATUS_LABELS[status] || status}: ${percentage}%` : ''
+                    }
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="count"
+                  >
+                    {statusData.map((entry) => (
+                      <Cell key={`cell-${entry.status}`} fill={STATUS_COLORS[entry.status] || '#8884d8'} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number, _name: string, props: any) => [
+                      `${value} марок (${props.payload.percentage}%)`,
+                      STATUS_LABELS[props.payload.status] || props.payload.status,
+                    ]}
+                  />
+                  <Legend
+                    formatter={(_value, entry: any) =>
+                      STATUS_LABELS[entry.payload.status] || entry.payload.status
+                    }
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                <Typography.Text type="secondary">Нет данных для отображения</Typography.Text>
+              </div>
+            )}
           </Card>
         </Col>
       </Row>
