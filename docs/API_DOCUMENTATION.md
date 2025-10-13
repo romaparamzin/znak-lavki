@@ -20,6 +20,7 @@ Authorization: Bearer <your_jwt_token>
 ```
 
 ### Get Token
+
 ```bash
 POST /auth/oauth/yandex
 Content-Type: application/json
@@ -50,6 +51,7 @@ GET /marks?page=1&limit=20&status=active&sortBy=createdAt&sortOrder=DESC
 ```
 
 **Query Parameters:**
+
 - `page` (optional): Page number, default: 1
 - `limit` (optional): Items per page, default: 20, max: 100
 - `status` (optional): Filter by status (active, blocked, expired, used)
@@ -60,6 +62,7 @@ GET /marks?page=1&limit=20&status=active&sortBy=createdAt&sortOrder=DESC
 - `sortOrder` (optional): Sort order (ASC, DESC)
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -93,6 +96,7 @@ GET /marks?page=1&limit=20&status=active&sortBy=createdAt&sortOrder=DESC
 ```
 
 **Example:**
+
 ```bash
 curl -X GET \
   'http://localhost:3001/api/v1/marks?page=1&limit=10&status=active' \
@@ -108,9 +112,11 @@ GET /marks/code/:markCode
 ```
 
 **Parameters:**
+
 - `markCode` (required): Unique mark code
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -124,6 +130,7 @@ GET /marks/code/:markCode
 ```
 
 **Example:**
+
 ```bash
 curl -X GET \
   'http://localhost:3001/api/v1/marks/code/99LAV123456789' \
@@ -140,6 +147,7 @@ Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "count": 100,
@@ -155,6 +163,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -170,6 +179,7 @@ Content-Type: application/json
 ```
 
 **Example:**
+
 ```bash
 curl -X POST \
   'http://localhost:3001/api/v1/marks/generate' \
@@ -192,6 +202,7 @@ Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "reason": "Suspected counterfeit"
@@ -199,6 +210,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -217,6 +229,7 @@ PUT /marks/:markCode/unblock
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -235,6 +248,7 @@ Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "markCodes": ["99LAV123456789", "99LAV987654321"],
@@ -243,6 +257,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -271,6 +286,7 @@ Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "markCode": "99LAV123456789",
@@ -282,6 +298,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "valid": true,
@@ -307,6 +324,7 @@ GET /dashboard/metrics
 ```
 
 **Response:**
+
 ```json
 {
   "totalMarks": 1000,
@@ -322,6 +340,7 @@ GET /dashboard/metrics
 ```
 
 **Example:**
+
 ```bash
 curl -X GET \
   'http://localhost:3001/api/v1/dashboard/metrics' \
@@ -339,9 +358,11 @@ GET /analytics/trends?days=30
 ```
 
 **Query Parameters:**
+
 - `days` (optional): Number of days, default: 30
 
 **Response:**
+
 ```json
 [
   {
@@ -366,6 +387,7 @@ GET /analytics/status-distribution
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -402,6 +424,7 @@ GET /audit/logs?page=1&limit=20&action=mark_blocked&startDate=2025-10-01&endDate
 ```
 
 **Query Parameters:**
+
 - `page` (optional): Page number
 - `limit` (optional): Items per page
 - `markCode` (optional): Filter by mark code
@@ -411,6 +434,7 @@ GET /audit/logs?page=1&limit=20&action=mark_blocked&startDate=2025-10-01&endDate
 - `endDate` (optional): End date (ISO 8601)
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -438,11 +462,13 @@ GET /audit/logs?page=1&limit=20&action=mark_blocked&startDate=2025-10-01&endDate
 ## Rate Limiting
 
 All endpoints are rate-limited:
+
 - **Standard endpoints**: 100 requests/minute per IP
 - **Login endpoint**: 5 requests/minute per IP
 - **Bulk operations**: 10 requests/minute per IP
 
 **Rate Limit Headers:**
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -487,6 +513,7 @@ GET /marks?page=2&limit=50
 ```
 
 **Response includes:**
+
 ```json
 {
   "data": [...],
@@ -504,16 +531,19 @@ GET /marks?page=2&limit=50
 ## Filtering & Sorting
 
 **Filtering:**
+
 ```
 GET /marks?status=active&supplierId=50
 ```
 
 **Sorting:**
+
 ```
 GET /marks?sortBy=createdAt&sortOrder=DESC
 ```
 
 **Search:**
+
 ```
 GET /marks?search=99LAV
 ```
@@ -527,8 +557,8 @@ Connect to WebSocket for real-time updates:
 ```javascript
 const socket = io('ws://localhost:3001', {
   auth: {
-    token: 'YOUR_JWT_TOKEN'
-  }
+    token: 'YOUR_JWT_TOKEN',
+  },
 });
 
 // Listen for mark events
@@ -550,6 +580,7 @@ socket.on('mark:validated', (data) => {
 ## SDKs & Libraries
 
 ### JavaScript/TypeScript
+
 ```bash
 npm install @znak-lavki/sdk
 ```
@@ -559,7 +590,7 @@ import { ZnakLavkiClient } from '@znak-lavki/sdk';
 
 const client = new ZnakLavkiClient({
   apiKey: 'YOUR_API_KEY',
-  baseURL: 'http://localhost:3001/api/v1'
+  baseURL: 'http://localhost:3001/api/v1',
 });
 
 // Get marks
@@ -568,7 +599,7 @@ const marks = await client.marks.list({ page: 1, limit: 10 });
 // Generate marks
 const result = await client.marks.generate({
   count: 100,
-  productId: 100
+  productId: 100,
 });
 ```
 
@@ -577,18 +608,23 @@ const result = await client.marks.generate({
 ## Best Practices
 
 ### 1. Use Pagination
+
 Always use pagination for list endpoints to avoid large responses.
 
 ### 2. Cache Responses
+
 Cache dashboard and analytics responses for 30-60 seconds.
 
 ### 3. Handle Rate Limits
+
 Implement exponential backoff when rate limited.
 
 ### 4. Validate Input
+
 Always validate input on client side before sending.
 
 ### 5. Use Bulk Operations
+
 Use bulk endpoints for blocking/unblocking multiple marks.
 
 ---
@@ -598,12 +634,14 @@ Use bulk endpoints for blocking/unblocking multiple marks.
 ### cURL Examples
 
 **Get Marks:**
+
 ```bash
 curl -X GET 'http://localhost:3001/api/v1/marks' \
   -H 'Authorization: Bearer YOUR_TOKEN'
 ```
 
 **Generate Marks:**
+
 ```bash
 curl -X POST 'http://localhost:3001/api/v1/marks/generate' \
   -H 'Authorization: Bearer YOUR_TOKEN' \
@@ -624,4 +662,3 @@ curl -X POST 'http://localhost:3001/api/v1/marks/generate' \
 **Last Updated**: October 2025  
 **Version**: 1.0.0  
 **Status**: ✅ Production Ready
-
