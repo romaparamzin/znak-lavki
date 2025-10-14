@@ -23,9 +23,22 @@ async function bootstrap() {
   // Global prefix for all routes
   app.setGlobalPrefix('api/v1');
 
-  // Enable CORS
+  // Enable CORS with dynamic origin
+  const allowedOrigins = configService
+    .get('CORS_ORIGIN', '*')
+    .split(',')
+    .map((o: string) => o.trim());
   app.enableCors({
-    origin: configService.get('CORS_ORIGIN', '*'),
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   });
 
@@ -59,11 +72,7 @@ async function bootstrap() {
         '- Rate limiting',
     )
     .setVersion('1.0.0')
-    .setContact(
-      'Znak Lavki Team',
-      'https://znak-lavki.ru',
-      'support@znak-lavki.ru',
-    )
+    .setContact('Znak Lavki Team', 'https://znak-lavki.ru', 'support@znak-lavki.ru')
     .addBearerAuth({
       type: 'http',
       scheme: 'bearer',
@@ -120,6 +129,3 @@ bootstrap().catch((error) => {
   console.error('❌ Failed to start application:', error);
   process.exit(1);
 });
-
-
-
