@@ -1,0 +1,97 @@
+{
+  "name": "@znak-lavki/e2e-tests",
+  "version": "1.0.0",
+  "description": "E2E testing suite for Znak Lavki system",
+  "private": true,
+  "scripts": {
+    "test": "jest --runInBand",
+    "test:api": "jest --testPathPattern=api --runInBand",
+    "test:web": "playwright test",
+    "test:web:headed": "playwright test --headed",
+    "test:web:debug": "playwright test --debug",
+    "test:mobile": "detox test",
+    "test:mobile:ios": "detox test --configuration ios.sim.debug",
+    "test:mobile:android": "detox test --configuration android.emu.debug",
+    "test:load": "k6 run tests/load/scenarios/*.js",
+    "test:smoke": "jest --testPathPattern=smoke",
+    "test:regression": "npm run test:api && npm run test:web && npm run test:mobile",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
+    "report": "allure generate allure-results --clean -o allure-report && allure open allure-report",
+    "docker:up": "docker-compose -f docker-compose.test.yml up -d",
+    "docker:down": "docker-compose -f docker-compose.test.yml down -v",
+    "seed": "ts-node utils/seed-test-data.ts",
+    "clean": "rm -rf allure-results allure-report reports coverage"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.3.1",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@playwright/test": "^1.40.1",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.4",
+    "allure-commandline": "^2.25.0",
+    "allure-jest": "^2.15.2",
+    "allure-playwright": "^2.15.2",
+    "detox": "^20.14.8",
+    "jest": "^29.7.0",
+    "jest-html-reporter": "^3.10.2",
+    "k6": "^0.0.0",
+    "pg": "^8.11.3",
+    "redis": "^4.6.11",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "wait-on": "^7.2.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/tests"
+    ],
+    "testMatch": [
+      "**/*.spec.ts",
+      "**/*.test.ts"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/config/jest.setup.ts"
+    ],
+    "collectCoverageFrom": [
+      "tests/**/*.ts",
+      "!tests/**/*.spec.ts",
+      "!tests/**/*.test.ts"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "reporters": [
+      "default",
+      [
+        "jest-html-reporter",
+        {
+          "pageTitle": "E2E Test Report",
+          "outputPath": "reports/test-report.html",
+          "includeFailureMsg": true,
+          "includeConsoleLog": true,
+          "dateFormat": "yyyy-mm-dd HH:MM:ss"
+        }
+      ],
+      [
+        "allure-jest/reporter",
+        {
+          "resultsDir": "allure-results"
+        }
+      ]
+    ],
+    "testTimeout": 60000,
+    "globalSetup": "<rootDir>/config/global-setup.ts",
+    "globalTeardown": "<rootDir>/config/global-teardown.ts"
+  }
+}
