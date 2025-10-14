@@ -1,0 +1,232 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run E2E tests nightly at 2 AM
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  api-tests:
+    name: API Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: znak_lavki_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: |
+          cd e2e
+          pnpm install --frozen-lockfile
+
+      - name: Start backend services
+        run: |
+          cd services/mark-service
+          pnpm install
+          pnpm run build
+          NODE_ENV=test PORT=3001 pnpm start &
+
+          # Wait for service to be ready
+          sleep 10
+
+      - name: Run API tests
+        run: |
+          cd e2e
+          pnpm run test:api
+        env:
+          API_BASE_URL: http://localhost:3001
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: znak_lavki_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: ''
+
+      - name: Upload API test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-test-results
+          path: e2e/reports/
+
+  web-tests:
+    name: Web E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: |
+          cd e2e
+          pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: |
+          cd e2e
+          pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Start test environment
+        run: |
+          docker-compose -f e2e/docker-compose.test.yml up -d
+
+          # Wait for services to be healthy
+          sleep 30
+
+      - name: Run Playwright tests
+        run: |
+          cd e2e
+          pnpm run test:web --project=${{ matrix.browser }}
+        env:
+          BASE_URL: http://localhost:5174
+          API_BASE_URL: http://localhost:3101
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: e2e/reports/playwright/
+
+      - name: Stop test environment
+        if: always()
+        run: docker-compose -f e2e/docker-compose.test.yml down -v
+
+  load-tests:
+    name: Load Tests (K6)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup K6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Start test environment
+        run: |
+          docker-compose -f e2e/docker-compose.test.yml up -d
+          sleep 30
+
+      - name: Run load tests
+        run: |
+          cd e2e/tests/load/scenarios
+          k6 run --out json=../../../reports/load-test.json mark-generation.js
+          k6 run --out json=../../../reports/validation-test.json mark-validation.js
+        env:
+          API_BASE_URL: http://localhost:3101
+
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: load-test-results
+          path: e2e/reports/
+
+      - name: Stop test environment
+        if: always()
+        run: docker-compose -f e2e/docker-compose.test.yml down -v
+
+  report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [api-tests, web-tests]
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: e2e/reports/
+
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: e2e/allure-results
+          allure_report: e2e/allure-report
+          gh_pages: gh-pages
+          allure_history: allure-history
+
+      - name: Deploy report to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: e2e/allure-report
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('e2e/reports/test-report.html', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🧪 E2E Test Results\n\nView full report: [Allure Report](https://your-org.github.io/znak-lavki/)`
+            });
