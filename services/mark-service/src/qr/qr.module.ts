@@ -1,17 +1,19 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
+import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { QualityMark } from '../entities/quality-mark.entity';
-import { AuditLog } from '../entities/audit-log.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { MarkController } from '../controllers/mark.controller';
-import { MarkService } from '../services/mark.service';
-import { MarkGeneratorService } from '../services/mark-generator.service';
-import { QrCodeService } from '../services/qr-code.service';
-import { CacheService } from '../services/cache.service';
+import { AuditLog } from '../entities/audit-log.entity';
+import { QualityMark } from '../entities/quality-mark.entity';
+import { AuditLogger } from '../middleware/logger.middleware';
 import { AuditService } from '../services/audit.service';
+import { CacheService } from '../services/cache.service';
+import { MarkGeneratorService } from '../services/mark-generator.service';
+import { MarkService } from '../services/mark.service';
 import { MetricsService } from '../services/metrics.service';
+import { QrCodeService } from '../services/qr-code.service';
 
 /**
  * QR Module
@@ -40,6 +42,7 @@ import { MetricsService } from '../services/metrics.service';
     CacheService,
     AuditService,
     MetricsService,
+    AuditLogger,
   ],
   exports: [MarkService, QrCodeService],
 })

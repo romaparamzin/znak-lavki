@@ -7,6 +7,7 @@ import { QrCodeService } from '../services/qr-code.service';
 import { AuditService } from '../services/audit.service';
 import { CacheService } from '../services/cache.service';
 import { MetricsService } from '../services/metrics.service';
+import { AuditLogger } from '../middleware/logger.middleware';
 import { QualityMark } from '../entities/quality-mark.entity';
 import { AuditLog } from '../entities/audit-log.entity';
 
@@ -24,6 +25,7 @@ import { AuditLog } from '../entities/audit-log.entity';
     AuditService,
     CacheService,
     MetricsService,
+    AuditLogger,
   ],
   exports: [MarkService],
 })
