@@ -22,24 +22,26 @@
 ## 💰 Стоимость инфраструктуры
 
 ### Минимальная конфигурация (MVP)
-| Ресурс | Конфигурация | Цена/месяц |
-|--------|--------------|------------|
-| PostgreSQL | s2.micro (2 vCPU, 8GB RAM, 50GB SSD) | ~3,000₽ |
-| Redis | hm1.nano (2GB RAM, 10GB SSD) | ~1,500₽ |
-| Kubernetes | 3 ноды (2 vCPU, 4GB RAM каждая) | ~6,000₽ |
-| Object Storage | ~20GB хранилище | ~50₽ |
-| Load Balancer | Network LB | ~500₽ |
-| **ИТОГО** | | **~11,000₽/месяц** |
+
+| Ресурс         | Конфигурация                         | Цена/месяц         |
+| -------------- | ------------------------------------ | ------------------ |
+| PostgreSQL     | s2.micro (2 vCPU, 8GB RAM, 50GB SSD) | ~3,000₽            |
+| Redis          | hm1.nano (2GB RAM, 10GB SSD)         | ~1,500₽            |
+| Kubernetes     | 3 ноды (2 vCPU, 4GB RAM каждая)      | ~6,000₽            |
+| Object Storage | ~20GB хранилище                      | ~50₽               |
+| Load Balancer  | Network LB                           | ~500₽              |
+| **ИТОГО**      |                                      | **~11,000₽/месяц** |
 
 ### Производственная конфигурация
-| Ресурс | Конфигурация | Цена/месяц |
-|--------|--------------|------------|
-| PostgreSQL | s2.small (4 vCPU, 16GB RAM, 100GB SSD) | ~6,000₽ |
-| Redis | hm1.micro (4GB RAM, 20GB SSD) | ~3,000₽ |
-| Kubernetes | 5 нод (4 vCPU, 8GB RAM каждая) | ~15,000₽ |
-| Object Storage | ~100GB хранилище | ~250₽ |
-| Load Balancer | Application LB + CDN | ~2,000₽ |
-| **ИТОГО** | | **~26,250₽/месяц** |
+
+| Ресурс         | Конфигурация                           | Цена/месяц         |
+| -------------- | -------------------------------------- | ------------------ |
+| PostgreSQL     | s2.small (4 vCPU, 16GB RAM, 100GB SSD) | ~6,000₽            |
+| Redis          | hm1.micro (4GB RAM, 20GB SSD)          | ~3,000₽            |
+| Kubernetes     | 5 нод (4 vCPU, 8GB RAM каждая)         | ~15,000₽           |
+| Object Storage | ~100GB хранилище                       | ~250₽              |
+| Load Balancer  | Application LB + CDN                   | ~2,000₽            |
+| **ИТОГО**      |                                        | **~26,250₽/месяц** |
 
 ---
 
@@ -48,6 +50,7 @@
 ### 1. Установите необходимые инструменты
 
 #### Yandex Cloud CLI
+
 ```bash
 # macOS
 brew install yandex-cloud/tap/yc
@@ -60,6 +63,7 @@ yc --version
 ```
 
 #### Terraform
+
 ```bash
 # macOS
 brew install terraform
@@ -74,6 +78,7 @@ terraform --version
 ```
 
 #### kubectl
+
 ```bash
 # macOS
 brew install kubernetes-cli
@@ -87,6 +92,7 @@ kubectl version --client
 ```
 
 #### Docker
+
 ```bash
 # Уже должен быть установлен, проверьте
 docker --version
@@ -94,6 +100,7 @@ docker-compose --version
 ```
 
 #### Helm (опционально, для мониторинга)
+
 ```bash
 # macOS
 brew install helm
@@ -153,6 +160,7 @@ yc resource-manager quota list
 ```
 
 **Минимальные требования для проекта:**
+
 - ✅ CPU: 10+ vCPU
 - ✅ RAM: 32+ GB
 - ✅ SSD: 200+ GB
@@ -238,6 +246,7 @@ terraform plan -out=tfplan
 ```
 
 **Будут созданы:**
+
 - ✅ VPC сеть и 3 подсети
 - ✅ Security Groups (для PostgreSQL, Redis, Kubernetes)
 - ✅ PostgreSQL кластер с 3 хостами (multi-AZ)
@@ -269,7 +278,7 @@ terraform output
 
 # Вы получите:
 # - postgres_host
-# - redis_host  
+# - redis_host
 # - k8s_cluster_id
 # - k8s_cluster_endpoint
 # - s3_bucket_name
@@ -281,6 +290,7 @@ terraform output
 ```
 
 **Сохраните outputs в файл:**
+
 ```bash
 terraform output -json > ../yandex-cloud-outputs.json
 ```
@@ -388,6 +398,7 @@ echo -n "your-redis-password" | base64
 ```
 
 **secrets.yaml:**
+
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -399,18 +410,18 @@ data:
   # Database (base64 encoded)
   DB_USERNAME: cG9zdGdyZXM= # postgres
   DB_PASSWORD: <ваш_base64_пароль_postgres>
-  
+
   # Redis (base64 encoded)
   REDIS_PASSWORD: <ваш_base64_пароль_redis>
-  
+
   # JWT (base64 encoded)
   JWT_SECRET: <ваш_base64_jwt_secret>
   JWT_REFRESH_SECRET: <ваш_base64_jwt_refresh_secret>
-  
+
   # S3 (base64 encoded) - из terraform output
   MINIO_ACCESS_KEY: <base64_s3_access_key>
   MINIO_SECRET_KEY: <base64_s3_secret_key>
-  
+
   # SMTP (опционально, base64 encoded)
   SMTP_PASSWORD: <ваш_base64_smtp_password>
 ```
@@ -431,6 +442,7 @@ nano configmap.yaml
 ```
 
 **configmap.yaml:**
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -439,36 +451,36 @@ metadata:
   namespace: znak-lavki
 data:
   # Database Configuration (из terraform output)
-  DB_HOST: "c-<cluster-id>.rw.mdb.yandexcloud.net" # Ваш postgres_host
-  DB_PORT: "6432"
-  DB_NAME: "znak_lavki"
-  DB_SSL: "true"
-  
+  DB_HOST: 'c-<cluster-id>.rw.mdb.yandexcloud.net' # Ваш postgres_host
+  DB_PORT: '6432'
+  DB_NAME: 'znak_lavki'
+  DB_SSL: 'true'
+
   # Redis Configuration (из terraform output)
-  REDIS_HOST: "c-<cluster-id>.rw.mdb.yandexcloud.net" # Ваш redis_host
-  REDIS_PORT: "6379"
-  
+  REDIS_HOST: 'c-<cluster-id>.rw.mdb.yandexcloud.net' # Ваш redis_host
+  REDIS_PORT: '6379'
+
   # MinIO/S3 Configuration
-  MINIO_ENDPOINT: "storage.yandexcloud.net"
-  MINIO_PORT: "443"
-  MINIO_USE_SSL: "true"
-  MINIO_BUCKET: "znak-lavki-qr-codes-prod"
-  
+  MINIO_ENDPOINT: 'storage.yandexcloud.net'
+  MINIO_PORT: '443'
+  MINIO_USE_SSL: 'true'
+  MINIO_BUCKET: 'znak-lavki-qr-codes-prod'
+
   # Application Configuration
-  NODE_ENV: "production"
-  LOG_LEVEL: "info"
-  
+  NODE_ENV: 'production'
+  LOG_LEVEL: 'info'
+
   # CORS
-  CORS_ORIGIN: "https://admin.znak-lavki.com,https://znak-lavki.com"
-  
+  CORS_ORIGIN: 'https://admin.znak-lavki.com,https://znak-lavki.com'
+
   # JWT
-  JWT_EXPIRES_IN: "24h"
-  
+  JWT_EXPIRES_IN: '24h'
+
   # SMTP (опционально)
-  SMTP_HOST: "smtp.yandex.ru"
-  SMTP_PORT: "465"
-  SMTP_USER: "noreply@znak-lavki.com"
-  EMAIL_FROM: "Znak Lavki <noreply@znak-lavki.com>"
+  SMTP_HOST: 'smtp.yandex.ru'
+  SMTP_PORT: '465'
+  SMTP_USER: 'noreply@znak-lavki.com'
+  EMAIL_FROM: 'Znak Lavki <noreply@znak-lavki.com>'
 ```
 
 ```bash
@@ -623,6 +635,7 @@ kubectl get hpa -n znak-lavki
 ### 1. Купите домен
 
 Зарегистрируйте домен, например:
+
 - **Reg.ru** (российский регистратор)
 - **Timeweb** (российский регистратор)
 - **Namecheap** (международный)
@@ -640,6 +653,7 @@ CNAME   www       znak-lavki.com               3600
 ```
 
 **Где взять EXTERNAL-IP-INGRESS:**
+
 ```bash
 kubectl get svc -n ingress-nginx ingress-nginx-controller
 # Используйте EXTERNAL-IP из вывода
@@ -656,37 +670,37 @@ metadata:
   name: znak-lavki-ingress
   namespace: znak-lavki
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/rate-limit: "100"
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/rate-limit: '100'
 spec:
   ingressClassName: nginx
   tls:
-  - hosts:
-    - admin.znak-lavki.com
-    - api.znak-lavki.com
-    secretName: znak-lavki-tls
+    - hosts:
+        - admin.znak-lavki.com
+        - api.znak-lavki.com
+      secretName: znak-lavki-tls
   rules:
-  - host: admin.znak-lavki.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: admin-panel
-            port:
-              number: 80
-  - host: api.znak-lavki.com
-    http:
-      paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: 3000
+    - host: admin.znak-lavki.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: admin-panel
+                port:
+                  number: 80
+    - host: api.znak-lavki.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 3000
 ```
 
 ```bash
@@ -752,6 +766,7 @@ kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
 ### 3. Импортируйте дашборды
 
 В Grafana импортируйте дашборды:
+
 - Kubernetes Cluster: ID 15760
 - Node Exporter: ID 1860
 - PostgreSQL: ID 9628
@@ -797,6 +812,7 @@ kubectl port-forward -n logging svc/kibana-kibana 5601
 ### 1. Автоматические бэкапы Managed Services
 
 **PostgreSQL:**
+
 ```bash
 # Бэкапы уже настроены через Terraform
 # По умолчанию: ежедневно в 3:00 AM, хранение 7 дней
@@ -812,6 +828,7 @@ yc managed-postgresql cluster restore \
 ```
 
 **Redis:**
+
 ```bash
 # Бэкапы настроены автоматически
 yc managed-redis cluster list-backups --cluster-name znak-lavki-redis
@@ -897,6 +914,7 @@ yc container image delete <image-id>
 ### 4. Используйте Reserved Capacity (до 20% экономии)
 
 Если вы планируете использовать ресурсы долгосрочно:
+
 1. Перейдите в [Yandex Cloud Console](https://console.cloud.yandex.ru)
 2. Billing → Committed Use Discounts
 3. Оформите commitment на 1 или 3 года
@@ -980,6 +998,7 @@ terraform apply
 ## 📋 Чеклист развертывания
 
 ### Перед развертыванием
+
 - [ ] Аккаунт Yandex Cloud создан и верифицирован
 - [ ] Пробный период активирован (4,000₽)
 - [ ] Yandex CLI установлен и настроен
@@ -989,6 +1008,7 @@ terraform apply
 - [ ] Квоты проверены и увеличены при необходимости
 
 ### Terraform
+
 - [ ] `terraform.tfvars` создан и заполнен
 - [ ] Сильные пароли сгенерированы
 - [ ] `terraform init` выполнен успешно
@@ -997,6 +1017,7 @@ terraform apply
 - [ ] Outputs сохранены
 
 ### Kubernetes
+
 - [ ] kubectl подключен к кластеру
 - [ ] Ingress Controller установлен
 - [ ] cert-manager установлен
@@ -1005,12 +1026,14 @@ terraform apply
 - [ ] ConfigMap создан и применен
 
 ### Docker образы
+
 - [ ] Container Registry создан
 - [ ] Образы собраны
 - [ ] Образы запушены в registry
 - [ ] Манифесты обновлены с правильными образами
 
 ### Деплой приложения
+
 - [ ] Deployments применены
 - [ ] Все поды в статусе Running
 - [ ] Services созданы
@@ -1018,6 +1041,7 @@ terraform apply
 - [ ] Логи проверены на ошибки
 
 ### Домен и SSL
+
 - [ ] Домен куплен
 - [ ] DNS записи настроены
 - [ ] DNS propagation завершен (24-48 часов)
@@ -1026,6 +1050,7 @@ terraform apply
 - [ ] HTTPS работает
 
 ### Мониторинг
+
 - [ ] Prometheus установлен
 - [ ] Grafana настроена
 - [ ] Дашборды импортированы
@@ -1033,6 +1058,7 @@ terraform apply
 - [ ] Логирование работает
 
 ### Безопасность
+
 - [ ] Security Groups настроены
 - [ ] Файрвол правила применены
 - [ ] Secrets не закоммичены в Git
@@ -1040,6 +1066,7 @@ terraform apply
 - [ ] Rate limiting включен
 
 ### Бэкапы
+
 - [ ] Автоматические бэкапы PostgreSQL включены
 - [ ] Автоматические бэкапы Redis включены
 - [ ] S3 версионирование включено
@@ -1047,6 +1074,7 @@ terraform apply
 - [ ] Процедура восстановления задокументирована
 
 ### Финальная проверка
+
 - [ ] Админ-панель доступна
 - [ ] API отвечает
 - [ ] Можно создать марку
@@ -1059,6 +1087,7 @@ terraform apply
 ## 📚 Полезные команды
 
 ### Yandex Cloud
+
 ```bash
 # Список всех ресурсов
 yc resource-manager folder list-resources
@@ -1073,6 +1102,7 @@ yc billing accounts list
 ```
 
 ### Kubernetes
+
 ```bash
 # Быстрый просмотр
 kubectl get all -n znak-lavki
@@ -1088,6 +1118,7 @@ kubectl port-forward svc/api-gateway 3000:3000 -n znak-lavki
 ```
 
 ### Terraform
+
 ```bash
 # Обновление ресурсов
 terraform apply -target=yandex_kubernetes_node_group.main
@@ -1105,16 +1136,19 @@ terraform state show yandex_kubernetes_cluster.main
 ## 🆘 Поддержка
 
 ### Документация
+
 - [Yandex Cloud Docs](https://cloud.yandex.ru/docs)
 - [Yandex Managed PostgreSQL](https://cloud.yandex.ru/docs/managed-postgresql/)
 - [Yandex Managed Kubernetes](https://cloud.yandex.ru/docs/managed-kubernetes/)
 - [Terraform Yandex Provider](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs)
 
 ### Комьюнити
+
 - [Yandex Cloud Community](https://t.me/yandexcloud)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/yandex-cloud)
 
 ### Техподдержка
+
 - Консоль: https://console.cloud.yandex.ru → Support
 - Email: cloud@support.yandex.ru
 - Telegram: @YandexCloudSupport
@@ -1124,6 +1158,7 @@ terraform state show yandex_kubernetes_cluster.main
 ## ✅ Готово!
 
 После выполнения всех шагов ваше приложение будет:
+
 - ✅ Развернуто на Yandex Cloud
 - ✅ Доступно по HTTPS с автоматическими SSL сертификатами
 - ✅ Отказоустойчиво (multi-AZ, автомасштабирование)
@@ -1132,6 +1167,7 @@ terraform state show yandex_kubernetes_cluster.main
 - ✅ С автоматическими бэкапами
 
 **Следующие шаги:**
+
 1. Настройте CI/CD для автоматического деплоя
 2. Оптимизируйте производительность
 3. Настройте алерты в Telegram/Slack
@@ -1143,4 +1179,3 @@ terraform state show yandex_kubernetes_cluster.main
 _Документ создан: 14 октября 2025_  
 _Версия: 1.0.0_  
 _Автор: Znak Lavki Team_
-

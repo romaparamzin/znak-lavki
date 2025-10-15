@@ -23,24 +23,29 @@ async function bootstrap() {
   // Global prefix for all routes
   app.setGlobalPrefix('api/v1');
 
-  // Enable CORS with dynamic origin
-  const allowedOrigins = configService
-    .get('CORS_ORIGIN', '*')
-    .split(',')
-    .map((o: string) => o.trim());
-  app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  });
+  // Enable CORS (allow all origins in development)
+  const nodeEnv = configService.get('NODE_ENV', 'development');
+  if (nodeEnv === 'development') {
+    app.enableCors({
+      origin: true, // Allow all origins in development
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    });
+  } else {
+    // Production CORS configuration
+    const allowedOrigins = configService
+      .get('CORS_ORIGIN', '')
+      .split(',')
+      .map((o: string) => o.trim())
+      .filter(Boolean);
+    app.enableCors({
+      origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    });
+  }
 
   // Global validation pipe
   app.useGlobalPipes(

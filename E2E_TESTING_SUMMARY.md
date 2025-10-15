@@ -3,6 +3,7 @@
 ## ✅ Что было добавлено
 
 ### 📦 Коммиты
+
 1. **feat: Add comprehensive E2E testing suite** (cff3ec2)
    - Добавлена полная система E2E тестирования
    - 13 файлов, 2072+ строк кода
@@ -47,9 +48,11 @@ e2e/
 ## 🧪 Типы тестов
 
 ### 1. API Integration Tests (Jest)
+
 **Файл:** `tests/api/marks-api.spec.ts`
 
 **Покрытие:**
+
 - ✅ **POST /api/v1/marks/generate** - Генерация марок
   - Успешная генерация (1-10000 марок)
   - Валидация GTIN
@@ -88,9 +91,11 @@ e2e/
 ---
 
 ### 2. Web E2E Tests (Playwright)
+
 **Файл:** `tests/web/mark-lifecycle.spec.ts`
 
 **Сценарии:**
+
 - ✅ **Mark Generation Flow**
   - Авторизация менеджера
   - Навигация к форме создания
@@ -124,6 +129,7 @@ e2e/
   - Экспорт в PDF
 
 **Браузеры:**
+
 - Chromium (Desktop)
 - Firefox (Desktop)
 - WebKit/Safari (Desktop)
@@ -135,10 +141,13 @@ e2e/
 ---
 
 ### 3. Load Tests (K6)
+
 **Файлы:** `tests/load/scenarios/*.js`
 
 #### mark-generation.js
+
 **Сценарий:**
+
 ```
 Ramp up:   100 users  (2 min)
 Sustain:   100 users  (5 min)
@@ -150,12 +159,15 @@ Ramp down: 0 users    (2 min)
 ```
 
 **Thresholds:**
+
 - p95 response time < 2s
 - Error rate < 10%
 - Custom error rate < 5%
 
 #### mark-validation.js
+
 **Сценарий:**
+
 ```
 Ramp up:   200 users  (1 min)
 Sustain:   200 users  (5 min)
@@ -167,11 +179,13 @@ Ramp down: 0 users    (2 min)
 ```
 
 **Thresholds:**
+
 - p99 response time < 500ms
 - p95 validation time < 300ms
 - Error rate < 5%
 
 **Метрики:**
+
 - Generation time
 - Validation time
 - Valid/invalid marks counter
@@ -182,7 +196,9 @@ Ramp down: 0 users    (2 min)
 ## 🛠️ Утилиты
 
 ### ApiClient (`utils/api-client.ts`)
+
 **Возможности:**
+
 - Автоматическая авторизация через Bearer token
 - Request/Response interceptors
 - Методы: GET, POST, PUT, PATCH, DELETE
@@ -192,6 +208,7 @@ Ramp down: 0 users    (2 min)
   - `waitForCondition(fn, opts)` - Ожидание условия
 
 **Пример использования:**
+
 ```typescript
 const api = new ApiClient('http://localhost:3001');
 await api.login('admin@test.com', 'password');
@@ -199,7 +216,9 @@ const response = await api.post('/api/v1/marks/generate', { ... });
 ```
 
 ### TestDataManager (`utils/test-data-manager.ts`)
+
 **Возможности:**
+
 - Подключение к PostgreSQL и Redis
 - Seeding тестовых пользователей
 - Seeding 100 тестовых марок
@@ -208,6 +227,7 @@ const response = await api.post('/api/v1/marks/generate', { ... });
 - Генерация валидных кодов марок
 
 **Пример использования:**
+
 ```typescript
 const testData = new TestDataManager();
 await testData.seed();
@@ -228,6 +248,7 @@ await testData.cleanup();
 **Файл:** `docker-compose.test.yml`
 
 **Сервисы:**
+
 - **postgres-test** (порт 5433)
   - PostgreSQL 15 Alpine
   - База: znak_lavki_test
@@ -250,6 +271,7 @@ await testData.cleanup();
 - **admin-panel-test** (порт 5174)
 
 **Особенности:**
+
 - Изолированная сеть `test-network`
 - Отдельные volumes для данных
 - Healthchecks для всех критичных сервисов
@@ -262,6 +284,7 @@ await testData.cleanup();
 **Файл:** `.github/workflows/e2e-tests.yml`
 
 ### Триггеры
+
 - **push** к веткам main/develop
 - **pull_request** к веткам main/develop
 - **schedule** - Nightly runs в 2:00 AM
@@ -270,7 +293,9 @@ await testData.cleanup();
 ### Jobs
 
 #### 1. api-tests
+
 **Что делает:**
+
 - Запускает PostgreSQL и Redis services
 - Устанавливает Node.js 18 и pnpm
 - Билдит и запускает mark-service
@@ -280,7 +305,9 @@ await testData.cleanup();
 **Timeout:** 20 минут
 
 #### 2. web-tests
+
 **Что делает:**
+
 - Запускает тесты параллельно для каждого браузера
 - Устанавливает Playwright browsers
 - Поднимает полное Docker окружение
@@ -291,7 +318,9 @@ await testData.cleanup();
 **Timeout:** 30 минут
 
 #### 3. load-tests
+
 **Что делает:**
+
 - Запускается только по расписанию или вручную
 - Устанавливает K6
 - Запускает Docker окружение
@@ -301,7 +330,9 @@ await testData.cleanup();
 **Timeout:** 30 минут
 
 #### 4. report
+
 **Что делает:**
+
 - Собирает все artifacts
 - Генерирует Allure отчёт
 - Публикует на GitHub Pages
@@ -314,12 +345,14 @@ await testData.cleanup();
 ## 📊 Метрики и критерии успеха
 
 ### API Tests
+
 - ✅ Все тесты зелёные
 - ✅ Response time < 2s (p95)
 - ✅ Error rate < 10%
 - ✅ Code coverage собирается
 
 ### Web Tests
+
 - ✅ Все тесты во всех браузерах зелёные
 - ✅ No console errors
 - ✅ Screenshots при ошибках
@@ -327,6 +360,7 @@ await testData.cleanup();
 - ✅ Accessibility score > 90
 
 ### Load Tests
+
 - ✅ Response time < 2s (p95)
 - ✅ Validation time < 500ms (p99)
 - ✅ Error rate < 5%
@@ -338,6 +372,7 @@ await testData.cleanup();
 ## 📈 Покрытие функциональности
 
 ### Полностью покрыто тестами:
+
 ✅ Генерация марок (1-10,000)
 ✅ Валидация марок
 ✅ Блокировка/разблокировка (одиночная и массовая)
@@ -354,11 +389,13 @@ await testData.cleanup();
 ✅ Валидация форм
 
 ### Частично покрыто:
+
 ⚠️ Мобильное приложение (заготовка для Detox)
 ⚠️ Интеграции с внешними системами
 ⚠️ Уведомления (только проверка audit logs)
 
 ### Не покрыто:
+
 ❌ Репликация БД
 ❌ Failover scenarios
 ❌ Disaster recovery
@@ -370,6 +407,7 @@ await testData.cleanup();
 ### Локально
 
 #### 1. Установка зависимостей
+
 ```bash
 cd e2e
 pnpm install
@@ -377,11 +415,13 @@ pnpm exec playwright install
 ```
 
 #### 2. Запуск Docker окружения
+
 ```bash
 pnpm run docker:up
 ```
 
 #### 3. Запуск тестов
+
 ```bash
 # API тесты
 pnpm run test:api
@@ -400,6 +440,7 @@ pnpm run test:regression
 ```
 
 #### 4. Просмотр отчётов
+
 ```bash
 # HTML отчёт
 pnpm run report
@@ -413,6 +454,7 @@ pnpm run allure:open
 ```
 
 #### 5. Очистка
+
 ```bash
 pnpm run docker:down
 pnpm run clean
@@ -423,11 +465,13 @@ pnpm run clean
 ### В CI/CD (GitHub Actions)
 
 **Автоматически:**
+
 - При push в main/develop
 - При создании Pull Request
 - Каждую ночь в 2:00 AM
 
 **Вручную:**
+
 1. Перейти на GitHub → Actions
 2. Выбрать workflow "E2E Tests"
 3. Нажать "Run workflow"
@@ -435,6 +479,7 @@ pnpm run clean
 5. Нажать "Run workflow"
 
 **Результаты:**
+
 - Отчёты доступны в Artifacts каждого run
 - Allure отчёт публикуется на GitHub Pages
 - Комментарий с результатами в PR
@@ -444,11 +489,13 @@ pnpm run clean
 ## 📦 Зависимости
 
 ### Production
+
 - `@faker-js/faker` ^8.3.1 - Генерация тестовых данных
 - `axios` ^1.6.2 - HTTP клиент
 - `dotenv` ^16.3.1 - Environment variables
 
 ### Development
+
 - `@playwright/test` ^1.40.1 - E2E тестирование веб-приложений
 - `jest` ^29.7.0 - Unit/Integration тестирование
 - `ts-jest` ^29.1.1 - TypeScript поддержка для Jest
@@ -521,29 +568,34 @@ pnpm run clean
 ### Что достигнуто:
 
 ✅ **Полная система E2E тестирования**
-   - 3 типа тестов (API, Web, Load)
-   - 62+ тестовых сценария
-   - 2300+ строк кода
+
+- 3 типа тестов (API, Web, Load)
+- 62+ тестовых сценария
+- 2300+ строк кода
 
 ✅ **Автоматизация через CI/CD**
-   - GitHub Actions workflow
-   - Матрица браузеров
-   - Автоматические отчёты
+
+- GitHub Actions workflow
+- Матрица браузеров
+- Автоматические отчёты
 
 ✅ **Изолированное окружение**
-   - Docker Compose конфигурация
-   - 8 сервисов для тестирования
-   - Healthchecks и автоматизация
+
+- Docker Compose конфигурация
+- 8 сервисов для тестирования
+- Healthchecks и автоматизация
 
 ✅ **Качественная документация**
-   - Подробный README (376 строк)
-   - Примеры использования
-   - Troubleshooting guide
+
+- Подробный README (376 строк)
+- Примеры использования
+- Troubleshooting guide
 
 ✅ **Инструменты для разработчиков**
-   - ApiClient для удобного тестирования
-   - TestDataManager для управления данными
-   - Утилиты и helpers
+
+- ApiClient для удобного тестирования
+- TestDataManager для управления данными
+- Утилиты и helpers
 
 ### Метрики:
 
@@ -580,6 +632,7 @@ pnpm run clean
 ### Добавление нового теста
 
 **API тест:**
+
 ```typescript
 // e2e/tests/api/new-feature.spec.ts
 describe('New Feature', () => {
@@ -592,6 +645,7 @@ describe('New Feature', () => {
 ```
 
 **Web тест:**
+
 ```typescript
 // e2e/tests/web/new-feature.spec.ts
 test('should display new feature', async ({ page }) => {
@@ -603,6 +657,7 @@ test('should display new feature', async ({ page }) => {
 ### Отладка тестов
 
 **Playwright:**
+
 ```bash
 # UI Mode
 pnpm exec playwright test --ui
@@ -615,6 +670,7 @@ pnpm exec playwright show-trace trace.zip
 ```
 
 **Jest:**
+
 ```bash
 # Debug with Node inspector
 node --inspect-brk node_modules/.bin/jest tests/api/marks-api.spec.ts
@@ -629,18 +685,19 @@ node --inspect-brk node_modules/.bin/jest tests/api/marks-api.spec.ts
 Система E2E тестирования полностью готова к использованию!
 
 **Следующие шаги:**
+
 1. ✅ Тесты готовы и запушены на GitHub
 2. ⏳ GitHub Actions автоматически запустятся при следующем push
 3. 📊 Отчёты будут доступны в Actions artifacts
 4. 🚀 Можно начинать разработку с уверенностью в качестве кода
 
 **Контакты:**
+
 - Issues: https://github.com/romaparamzin/znak-lavki/issues
 - Discussions: https://github.com/romaparamzin/znak-lavki/discussions
 
 ---
 
-*Документ создан автоматически при добавлении E2E testing suite*  
-*Дата: 14 октября 2025*  
-*Версия: 1.0.0*
-
+_Документ создан автоматически при добавлении E2E testing suite_  
+_Дата: 14 октября 2025_  
+_Версия: 1.0.0_
